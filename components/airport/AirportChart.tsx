@@ -1,55 +1,70 @@
 import { Feather } from '@expo/vector-icons';
-import React from "react"
-import { View, Text, Image } from "react-native"
+import React from 'react';
+import { View, Text, Image, FlatList, Dimensions } from 'react-native';
 
 type AirportData = {
-  code: string
-  country: string
-  visits: number
-  flagUrl: string
-}
+  code: string;
+  country: string;
+  visits: number;
+  flagUrl: string;
+};
 
 type AirportChartProps = {
-  data: AirportData[]
-}
-
+  data: AirportData[];
+};
 export function AirportChart({ data }: AirportChartProps) {
-  const maxVisits = Math.max(...data.map((item) => item.visits))
+  const maxVisits = Math.max(...data.map((item) => item.visits));
+
+  const screenWidth = Dimensions.get('window').width;
+  const flagCodeWidth = 80;
+  const barMaxWidth = screenWidth - flagCodeWidth - 120;
+
+  const renderItem = ({ item }: { item: AirportData }) => (
+    <View
+      key={item.code}
+      className="flex-row items-center"
+      accessibilityRole="progressbar"
+      accessibilityLabel={`${item.code} with ${item.visits} visits`}
+      style={{ marginBottom: 8 }}>
+      <View
+        style={{
+          width: flagCodeWidth,
+          flexDirection: 'row',
+          alignItems: 'center',
+          // borderRightWidth: 1,
+          // borderColor: '#C4C4C4',
+        }}>
+        <Image
+          source={{ uri: item.flagUrl }}
+          style={{ width: 24, height: 16, marginRight: 8 }}
+          resizeMode="cover"
+          accessibilityLabel={`Flag of ${item.country}`}
+        />
+        <Text style={{ fontWeight: '500', color: '#333' }}>{item.code}</Text>
+      </View>
+
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        <View
+          style={{
+            height: 20,
+            width: (item.visits / maxVisits) * barMaxWidth,
+            backgroundColor: '#23d013',
+            borderRadius: 4,
+          }}
+        />
+        <Text style={{ marginLeft: 8, color: '#333' }}>{item.visits}</Text>
+      </View>
+    </View>
+  );
 
   return (
-    <View className="space-y-3">
-      {data.map((airport, index) => (
-        <View 
-          key={`${airport.code}-${index}`} 
-          className="flex-row items-center space-x-3"
-          accessibilityRole="progressbar"
-          accessibilityLabel={`${airport.code} with ${airport.visits} visits`}
-        >
-          <View className="w-16">
-            <Image 
-              source={{ uri: airport.flagUrl }} 
-              className="h-4 w-6" 
-              resizeMode="cover"
-              accessibilityLabel={`Flag of ${airport.country}`}
-            />
-          </View>
-          
-          <Text className="w-14 font-medium text-gray-900">
-            {airport.code}
-          </Text>
-          
-          <View className="flex-1 flex-row items-center">
-            <View 
-              className="h-6 rounded bg-[#23d013]" 
-              style={{ width: `${(airport.visits / maxVisits) * 100}%` }} 
-            />
-            <Text className="ml-3 text-gray-900">
-              {airport.visits}
-            </Text>
-          </View>
-        </View>
-      ))}
+    <View className="rounded-xl bg-white p-4">
+      <FlatList
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.code}
+        scrollEnabled={false}
+      />
     </View>
-  )
+  );
 }
-

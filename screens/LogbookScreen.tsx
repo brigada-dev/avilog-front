@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 
-import { FlightEntry } from '../components/FlightEntry';
-import { StatCard } from '../components/StatCard';
+import { FlightEntries } from '../components/FlightEntries';
+import { StatCards } from '../components/StatCards';
 
 const RECENT_FLIGHTS = [
   {
@@ -83,14 +83,10 @@ export function LogbookScreen() {
           accessibilityRole="list"
           accessibilityLabel="Recent flights">
           <Text className="mb-4 text-2xl font-bold">Recent flights</Text>
-          {RECENT_FLIGHTS.map((flight, index) => (
-            <FlightEntry key={index} {...flight} />
-          ))}
+          <FlightEntries />
         </View>
 
-        <StatCard icon={require('../assets/clock-icon.png')} label="TOTAL TIME" value="2850:45 H" />
-
-        <StatCard icon={require('../assets/pilot-hat-icon.png')} label="PIC" value="12" />
+        <StatCards />
       </View>
     </ScrollView>
   );
