@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { Text, View, Alert, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import { Image } from 'expo-image';
-import { Button } from '~/components/Button';
-import { useRouter, useLocalSearchParams, Stack, Link } from 'expo-router';
+import { useLocalSearchParams, Stack, Link } from 'expo-router';
 import { GradientBackgroundSecondary } from '~/components/ui/GradientBackground';
 import { ScrollView } from 'react-native';
 import { Container } from '~/components/Container';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 const aircrafts = [
   {
@@ -275,7 +273,7 @@ export default function AircraftDetails() {
                     <Text style={styles.buttonText}>Show flights</Text>
                   </TouchableOpacity>
                 </Link>
-                <Link href={`/aircraft/edit/${aircraft.id}`} asChild>
+                <Link href={`../edit/${id}`} asChild>
                   <TouchableOpacity style={styles.editBtn}>
                     <Text style={styles.buttonText}>Edit aircraft</Text>
                   </TouchableOpacity>

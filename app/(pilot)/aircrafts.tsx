@@ -52,7 +52,7 @@ export default function AircraftsRoute() {
           let isFirst = key === 0;
           let isLast = key === aircrafts.length - 1;
           return (
-            <Link href={`/(pilot)/aircraft/${aircraft.id}`} key={aircraft.id} asChild>
+            <Link href={`/(pilot)/(aircraft)/${aircraft.id}`} key={aircraft.id} asChild>
               <TouchableOpacity>
                 <View
                   className="h-32 flex-1 rounded-xl bg-white"
@@ -103,14 +103,11 @@ export default function AircraftsRoute() {
         <View
           className="flex-1 items-center justify-center"
           style={{ marginBottom: 32, marginTop: 16 }}>
-          <Link href={'/(pilot)/add-aircraft'} asChild>
-            <TouchableOpacity className="flex-row items-center gap-2">
-              <Button
-                title="Add aircraft"
-                iconLeft={require('../../assets/images/plane.png')}
-                onPress={() => {}}
-              />
-            </TouchableOpacity>
+          <Link href={`../add`} asChild>
+            <Button
+              title="Add aircraft"
+              iconLeft={require('../../assets/images/plane.png')}
+            />
           </Link>
         </View>
       </Layout>

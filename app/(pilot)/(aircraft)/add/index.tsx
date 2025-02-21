@@ -9,7 +9,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { FontAwesome, FontAwesome5, FontAwesome6, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
 import { GradientBackgroundSecondary } from '~/components/ui/GradientBackground';
@@ -81,6 +81,7 @@ export default function EditAircraft() {
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
+      selectionLimit: 1,
     });
 
     if (!result.canceled) {
@@ -93,7 +94,7 @@ export default function EditAircraft() {
       <ScrollView>
         <Container>
           <View className="mb-4 rounded-xl bg-[#F5F5F5] p-4">
-            <Header title="Aircraft" />
+            <Header title="ADD AIRCRAFT" />
             <View className="my-4 w-full rounded-2xl border border-[#DBDADA] bg-white p-4">
               <Text className="mb-2 text-gray-600">Registration</Text>
               <TextInput
@@ -237,40 +238,59 @@ export default function EditAircraft() {
               />
             </View>
             <View className="mb-4 mt-4 w-full rounded-2xl border border-[#DBDADA] bg-white p-4">
-              <View className="flex-row">
-                <View className="flex-1">
-                  {aircraft?.imageUrl ? (
-                    <Image source={{ uri: aircraft.imageUrl }} style={{ height: 128 }} />
-                  ) : (
-                    <View className="flex-1 items-center justify-center">
-                      <View className="rounded-xl bg-[#D9D9D9] px-10 py-2">
+              <View className="flex-1 flex-row">
+                {aircraft?.imageUrl !== null || imageUri.length !== 0 ? (
+                  <TouchableOpacity onPress={() => pickImage()} className="flex-1">
+                    <View className="flex-1 flex-row">
+                      <View className="flex-1">
                         <Image
-                          source={require('../../../../assets/images/image_placeholder.png')}
-                          style={{ height: 80, width: 80 }}
+                          source={{
+                            uri: aircraft?.imageUrl !== null ? aircraft?.imageUrl : imageUri,
+                          }}
+                          style={{ height: 128, borderRadius: 16 }}
                         />
                       </View>
+                      <View className="flex-1 items-center justify-center">
+                        <Ionicons name="add-circle-outline" size={80} color="#34C759" />
+                        <Text style={styles.imagePickerText} className="text-lg">
+                          Change Image
+                        </Text>
+                      </View>
                     </View>
-                  )}
-                </View>
-                <View className="flex-1 items-center justify-center">
-                  <Ionicons name="add-circle-outline" size={80} color='#34C759' />
-                </View>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity onPress={() => pickImage()} className="flex-1">
+                    <View className="flex-row">
+                      <View className="flex-1 items-center justify-center">
+                        <View className="rounded-xl bg-[#D9D9D9] px-10 py-2">
+                          <Image
+                            source={require('../../../../assets/images/image_placeholder.png')}
+                            style={{ height: 80, width: 80 }}
+                          />
+                        </View>
+                      </View>
+                      <View className="flex-1 items-center justify-center">
+                        <Ionicons name="add-circle-outline" size={80} color="#34C759" />
+                        <Text style={styles.imagePickerText} className="text-lg">
+                          Add image
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
-            {/* <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
-              {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.image} />
-              ) : (
-                <Ionicons name="image-outline" size={50} color="gray" />
-              )}
-              <Text style={styles.imagePickerText}>Change Image</Text>
-            </TouchableOpacity> */}
-
-            {/* Save Button */}
-            <TouchableOpacity style={styles.saveButton}>
-              <Ionicons name="airplane" size={20} color="white" />
-              <Text style={styles.saveButtonText}>Save Aircraft</Text>
-            </TouchableOpacity>
+            <View
+              className="flex-1 items-center justify-center"
+              style={{ marginBottom: 32, marginTop: 16 }}>
+              <TouchableOpacity style={[styles.button]}>
+                <Image
+                  source={require('../../../../assets/images/white_plane.png')}
+                  style={{ width: 24, height: 24, marginRight: 8 }}
+                />
+                <Text style={styles.buttonText}>Save aircraft</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Container>
       </ScrollView>
@@ -283,6 +303,21 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#D0FFD6',
     alignItems: 'center',
+  },
+  button: {
+    alignItems: 'center',
+    backgroundColor: '#2ED013',
+    borderRadius: 16,
+    elevation: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   header: {
     fontSize: 22,

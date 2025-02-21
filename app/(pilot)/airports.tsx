@@ -37,12 +37,6 @@ const airportData = [
 export default function AirportsRoute() {
   return (
     <>
-      <Stack.Screen
-        name="index"
-        options={{
-          headerShown: false,
-        }}
-      />
       <Layout>
         <Header title="Airports" />
         <View>
