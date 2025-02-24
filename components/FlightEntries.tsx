@@ -1,4 +1,5 @@
-import { View, Text, Image, FlatList } from 'react-native';
+import { Link } from 'expo-router';
+import { View, Text, Image, FlatList, TouchableOpacity } from 'react-native';
 
 type FlightEntriesProps = {
   id: number;
@@ -70,40 +71,50 @@ const recentFlights: FlightEntriesProps[] = [
 ];
 const renderFlightCard = ({ item }: { item: FlightEntriesProps }) => {
   return (
-    <View className="flex-1 flex-row items-center justify-between">
-      <View className="w-full flex-1 flex-col items-center p-2">
-        <View className="flex flex-row items-center justify-between gap-3">
-          <Image source={require('../assets/plane-icon.png')} className="mr-2 h-6 w-6" />
-          <Text className="text-base font-medium">{item.registration}</Text>
-        </View>
-        <View className="flex flex-row items-center justify-between gap-2">
-          <Image source={item.depFlag} className="mr-2 h-7 w-10" />
-          <View className="flex items-center justify-center rounded-md border border-black px-2">
-            <Text className="text-xs font-normal">{item.depTime}</Text>
-            <Text className="text-sm font-bold text-black">{item.from}</Text>
+    <Link href={`/(pilot)/flights/${item.id}`} asChild>
+      <TouchableOpacity>
+        <View className="flex-1 flex-row items-center justify-between">
+          <View className="w-full flex-1 flex-col items-center p-2">
+            <View className="flex flex-row items-center justify-between gap-3">
+              <Image
+                source={require('../assets/plane-icon.png')}
+                style={{ width: 24, height: 24, marginRight: 8 }}
+              />
+              <Text className="text-base font-medium">{item.registration}</Text>
+            </View>
+            <View className="flex flex-row items-center justify-between gap-2">
+              <Image source={item.depFlag} className="mr-2 h-7 w-10" />
+              <View className="flex items-center justify-center rounded-md border border-black px-2">
+                <Text className="text-xs font-normal">{item.depTime}</Text>
+                <Text className="text-sm font-bold text-black">{item.from}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View className="flex-col items-center">
+            <Text className="mx-2 text-xl font-medium">{item.type}</Text>
+            <Text className="mx-2 text-3xl font-bold">{item.duration}</Text>
+          </View>
+
+          <View className="w-full flex-1 flex-col items-center p-2">
+            <View className="flex flex-row items-center justify-between gap-3">
+              <Text className="text-base font-medium">{item.date}</Text>
+              <Image
+                source={require('../assets/images/calendar.png')}
+                style={{ width: 24, height: 24, marginRight: 8 }}
+              />
+            </View>
+            <View className="flex flex-row items-center justify-between gap-2">
+              <View className="flex items-center justify-center rounded-md border border-black px-2">
+                <Text className="text-xs font-normal">{item.depTime}</Text>
+                <Text className="text-sm font-bold text-black">{item.from}</Text>
+              </View>
+              <Image source={item.arrFlag} className="h-7 w-10" />
+            </View>
           </View>
         </View>
-      </View>
-
-      <View className="flex-col items-center">
-        <Text className="mx-2 text-xl font-medium">{item.type}</Text>
-        <Text className="mx-2 text-3xl font-bold">{item.duration}</Text>
-      </View>
-
-      <View className="w-full flex-1 flex-col items-center p-2">
-        <View className="flex flex-row items-center justify-between gap-3">
-          <Text className="text-base font-medium">{item.date}</Text>
-          <Image source={require('../assets/images/calendar.png')} className="mr-2 h-6 w-6" />
-        </View>
-        <View className="flex flex-row items-center justify-between gap-2">
-          <View className="flex items-center justify-center rounded-md border border-black px-2">
-            <Text className="text-xs font-normal">{item.depTime}</Text>
-            <Text className="text-sm font-bold text-black">{item.from}</Text>
-          </View>
-          <Image source={item.arrFlag} className="h-7 w-10" />
-        </View>
-      </View>
-    </View>
+      </TouchableOpacity>
+    </Link>
   );
 };
 

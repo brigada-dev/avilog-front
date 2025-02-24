@@ -2,13 +2,12 @@ import { Link } from 'expo-router';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import '../assets/images/logbook.png';
 
-type MenuCardProps = {
+export type MenuCardProps = {
   id: number;
   title: string;
   icon: any;
-  route: '/(pilot)/logbook' | '/modal' | '/profile' | '/time-summary';
+  route: '/(pilot)/flights/add' | '/(pilot)/flights';
 };
 
 const menuItems: MenuCardProps[] = [
@@ -16,13 +15,13 @@ const menuItems: MenuCardProps[] = [
     id: 1,
     title: 'Add flight',
     icon: require('../assets/images/logbook.png'),
-    route: '/(pilot)/logbook',
+    route: '/(pilot)/flights/add',
   },
   {
     id: 2,
     title: 'All flights',
     icon: require('../assets/images/folder.png'),
-    route: '/modal',
+    route: '/(pilot)/flights',
   },
 ];
 

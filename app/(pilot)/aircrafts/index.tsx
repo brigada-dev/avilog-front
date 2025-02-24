@@ -4,7 +4,7 @@ import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import { Image } from 'expo-image';
 import { Button } from '~/components/Button';
-import { Link, useSegments } from 'expo-router';
+import { Link, Stack, useSegments } from 'expo-router';
 
 const aircrafts = [
   {
@@ -46,13 +46,14 @@ const aircrafts = [
 export default function AircraftsRoute() {
   return (
     <>
-      <Layout>
+      <Stack.Screen options={{ headerShown: false }} />
+      <Layout variant="primary">
         <Header title="Aircrafts" />
         {aircrafts.map((aircraft, key) => {
           let isFirst = key === 0;
           let isLast = key === aircrafts.length - 1;
           return (
-            <Link href={`/(pilot)/(aircraft)/${aircraft.id}`} key={aircraft.id} asChild>
+            <Link href={`/aircrafts/${aircraft.id}`} key={aircraft.id} asChild>
               <TouchableOpacity>
                 <View
                   className="h-32 flex-1 rounded-xl bg-white"
@@ -65,7 +66,7 @@ export default function AircraftsRoute() {
                         <View className="flex-1 items-center justify-center">
                           <View className="rounded-xl bg-[#D9D9D9] px-10 py-2">
                             <Image
-                              source={require('../../assets/images/image_placeholder.png')}
+                              source={require('../../../assets/images/image_placeholder.png')}
                               style={{ height: 80, width: 80 }}
                             />
                           </View>
@@ -80,14 +81,14 @@ export default function AircraftsRoute() {
                       <View className="ml-4 flex flex-row gap-2">
                         <View className="flex-row items-center">
                           <Image
-                            source={require('../../assets/images/clock.png')}
+                            source={require('../../../assets/images/clock.png')}
                             style={{ height: 24, width: 24 }}
                           />
                           <Text className="text-sm font-bold">{aircraft.flightTime}</Text>
                         </View>
                         <View className="flex-row items-center">
                           <Image
-                            source={require('../../assets/images/landing.png')}
+                            source={require('../../../assets/images/landing.png')}
                             style={{ height: 24, width: 24 }}
                           />
                           <Text className="text-sm font-bold">{aircraft.flights}</Text>
@@ -103,11 +104,8 @@ export default function AircraftsRoute() {
         <View
           className="flex-1 items-center justify-center"
           style={{ marginBottom: 32, marginTop: 16 }}>
-          <Link href={`../add`} asChild>
-            <Button
-              title="Add aircraft"
-              iconLeft={require('../../assets/images/plane.png')}
-            />
+          <Link href="/(pilot)/aircrafts/add" asChild>
+            <Button title="Add aircraft" iconLeft={require('../../../assets/images/plane.png')} />
           </Link>
         </View>
       </Layout>

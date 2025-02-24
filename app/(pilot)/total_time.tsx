@@ -58,7 +58,7 @@ export default function TotalTimeChartScreen() {
   }));
 
   return (
-    <Layout>
+    <Layout variant='primary'>
       <Header title="TOTAL TIME" />
       <View className="flex-1 rounded-xl bg-white p-4 shadow-md">
         <SegmentedControl

@@ -20,7 +20,7 @@ export default function LogbookRoute() {
           headerShown: false,
         }}
       />
-      <Layout>
+      <Layout variant='primary'>
         <Header title='Logbook' />
         <SecondaryButtons />
         <CircleButtons />

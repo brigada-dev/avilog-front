@@ -1,25 +1,14 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { FlightEntries } from '../../components/FlightEntries';
-import { MainButtons } from '../../components/MainButtons';
-import { StatCards } from '../../components/StatCards';
+import { FlightEntries } from '~/components//FlightEntries';
+import { MainButtons } from '~/components//PrimaryButtons';
+import { StatCards } from '~/components//StatCards';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 
-// const MENU_ITEMS = [
-//   { title: 'Logbook', icon: 'https://v0.dev/placeholder.svg', route: '/logbook' as const },
-//   { title: 'Maps', icon: 'https://v0.dev/placeholder.svg', route: '/modal' as const },
-//   {
-//     title: 'Time summary',
-//     icon: 'https://v0.dev/placeholder.svg',
-//     route: '/time-summary' as const,
-//   },
-//   { title: 'Profile', icon: 'https://v0.dev/placeholder.svg', route: '/profile' as const },
-// ];
-
 export default function App() {
   return (
-      <Layout>
+      <Layout variant='primary'>
         <Header title="Avilog" noBackButton />
         <View className="flex-1 shadow-sm">
           <MainButtons />

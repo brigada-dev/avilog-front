@@ -99,7 +99,7 @@ export default function MonthlyChartScreen() {
   }));
 
   return (
-    <Layout>
+    <Layout variant='primary'>
       <Header title="MONTHLY" />
       <View className="flex-1 rounded-xl bg-white p-4 shadow-md">
         <SegmentedControl

@@ -2,7 +2,6 @@ import { Link } from 'expo-router';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import '../assets/images/logbook.png';
 
 type MenuCardProps = {
   id: number;

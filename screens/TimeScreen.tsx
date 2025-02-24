@@ -57,7 +57,7 @@ export function TimeScreen() {
   const router = useRouter();
 
   return (
-    <GradientBackground>
+    <GradientBackground variant='primary'>
       <ScrollView>
         <View className="p-6">
           <View className="mb-6 flex-row items-center">

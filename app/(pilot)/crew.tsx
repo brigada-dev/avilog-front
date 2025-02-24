@@ -61,7 +61,7 @@ export default function CrewRoute() {
   }));
 
   return (
-    <Layout>
+    <Layout variant='primary'>
       <Header title="CREW" />
         <View className="flex-1 rounded-xl bg-white p-4 shadow-md">
           <SegmentedControl

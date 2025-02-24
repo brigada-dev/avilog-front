@@ -37,7 +37,7 @@ const airportData = [
 export default function AirportsRoute() {
   return (
     <>
-      <Layout>
+      <Layout variant="primary">
         <Header title="Airports" />
         <View>
           <AirportChart data={airportData} />

@@ -5,10 +5,8 @@ export default function PilotLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="logbook" options={{ headerShown: false }} />
-      <Stack.Screen name="crew" options={{ headerShown: false }} />
-      <Stack.Screen name="aircrafts" options={{ headerShown: false }} />
-      <Stack.Screen name="(aircraft)" options={{ headerShown: false }} />
       <Stack.Screen name="airports" options={{ headerShown: false }} />
+      <Stack.Screen name="crew" options={{ headerShown: false }} />
       <Stack.Screen name="maps" options={{ headerShown: false }} />
       <Stack.Screen name="monthly" options={{ headerShown: false }} />
       <Stack.Screen name="profile" options={{ headerShown: false }} />
