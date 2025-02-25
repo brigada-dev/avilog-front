@@ -7,7 +7,7 @@ type MenuCardProps = {
   id: number;
   title: string;
   icon: any;
-  route: '/(pilot)/logbook' | '/modal' | '/profile' | '/time-summary';
+  route: '/(pilot)/logbook' | '/maps' | '/profile' | '/time-summary';
 };
 
 const menuItems: MenuCardProps[] = [
@@ -21,7 +21,7 @@ const menuItems: MenuCardProps[] = [
     id: 2,
     title: 'Maps',
     icon: require('../assets/images/maps.png'),
-    route: '/modal',
+    route: '/maps',
   },
   {
     id: 3,
