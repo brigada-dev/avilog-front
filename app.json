@@ -15,9 +15,12 @@
       [
         "expo-asset",
         {
-          "assets": ["./assets/images"]
+          "assets": [
+            "./assets/images"
+          ]
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

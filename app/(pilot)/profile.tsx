@@ -1,60 +1,196 @@
-import { Stack } from 'expo-router';
-import React from 'react';
-import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, Switch } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Switch,
+  Platform,
+  Keyboard,
+} from 'react-native';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import { Button } from '~/components/Button';
+import { useAuth } from '~/context/auth-context';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Dropdown } from 'react-native-element-dropdown';
+
+const userSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  surname: z.string().min(1, 'Surname is required'),
+  email: z.string().email('Invalid email').min(1, 'Email is required'),
+  standard_style: z.array(z.string()).nonempty('Select at least one standard'),
+});
+
+type UserType = z.infer<typeof userSchema>;
+const standardOptions = [
+  { label: 'EASA', value: 'EASA' },
+  { label: 'FAA', value: 'FAA' },
+  { label: 'ICAO', value: 'ICAO' },
+  { label: 'CAA', value: 'CAA' },
+  { label: 'DGCA', value: 'DGCA' },
+];
 
 export default function ProfileRoute() {
-  const router = useRouter();
+  const { signOut, user } = useAuth();
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<UserType>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      standard_style: user.standard_style,
+    },
+  });
   const [decimalFormat, setDecimalFormat] = React.useState(false);
   return (
     <>
       <Layout variant="tertiary">
         <Header title="Profile" />
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps="handled">
           <View className="mb-4">
             {/* Input Fields */}
             <View>
               <View className="mb-4 mt-4 rounded-xl bg-white p-4 shadow-sm">
                 <Text className="mb-2 italic text-gray-600">Name</Text>
                 <TextInput placeholder="Write your name here.." className="text-gray-800" />
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      className="text-gray-800"
+                      value={value}
+                      onChangeText={onChange}
+                      autoCapitalize="none"
+                      autoComplete="name-given"
+                      autoCorrect={false}
+                    />
+                  )}
+                />
+                {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
               </View>
 
               <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
                 <Text className="mb-2 italic text-gray-600">Surname</Text>
-                <TextInput placeholder="Write your surname here.." className="text-gray-800" />
+                <Controller
+                  control={control}
+                  name="surname"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      className="text-gray-800"
+                      value={value}
+                      onChangeText={onChange}
+                      autoCapitalize="none"
+                      autoComplete="name-given"
+                      autoCorrect={false}
+                    />
+                  )}
+                />
+                {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
               </View>
 
               <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
                 <Text className="mb-2 italic text-gray-600">Email</Text>
-                <TextInput placeholder="Write your email here.." className="text-gray-800" />
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      className="text-gray-800"
+                      value={value}
+                      onChangeText={onChange}
+                      autoCapitalize="none"
+                      autoComplete="name-given"
+                      autoCorrect={false}
+                      editable={false}
+                    />
+                  )}
+                />
+                {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
               </View>
 
-              {/* Language Selector */}
-              <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+              {/* <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
                 <Text className="mb-2 italic text-gray-600">Language</Text>
                 <View className="flex-row items-center">
                   <Image
-                    source={{ uri: 'https://flagcdn.com/w40/se.png' }}
+                    source={{ uri: 'https://flagcdn.com/w40/us.png' }}
                     className="mr-2 h-4 w-6"
                   />
-                  <Text>Swedish</Text>
+                  <Controller
+                    control={control}
+                    name="language"
+                    render={({ field: { onChange, value } }) => <Text>{value}</Text>}
+                  />
+                  {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
                 </View>
-              </View>
+              </View> */}
 
-              {/* Standard Style */}
               <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
-                <Text className="mb-2 italic text-gray-600">Standard style</Text>
-                <View className="flex-row items-center justify-between">
-                  <Text>EASA</Text>
-                  <Feather name="chevron-down" size={20} color="#23d013" />
-                </View>
+                <Controller
+                  control={control}
+                  name="standard_style"
+                  render={({ field: { onChange, value = '' } }) => (
+                    <View style={{ marginBottom: 10 }}>
+                      <Text className="mb-2 italic text-gray-600">Email</Text>
+                      <Dropdown
+                        style={{
+                          borderRadius: 8,
+                          justifyContent: 'center', // Centers text inside
+                          backgroundColor: 'white', // Ensures visibility
+                        }}
+                        containerStyle={{
+                          borderRadius: 16,
+                          shadowOffset: {width: 0, height:0},
+                          overflow: 'hidden'
+                        }}
+                        placeholderStyle={{
+                          color: 'gray',
+                          fontSize: 16,
+                        }}
+                        selectedTextStyle={{
+                          color: 'black',
+                          fontSize: 16,
+                          paddingTop: 10, // Increases tappable area
+                        }}
+                        data={standardOptions}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Select Standard Style"
+                        value={value}
+                        onChange={(item) => {
+                          console.log('Dropdown Selected:', item);
+                          onChange(item.value);
+                          setValue('standard_style', item.value);
+                        }}
+                        renderItem={(item, selected) => (
+                          <View
+                            style={{
+                              paddingVertical: 12, // Expands tap area
+                              paddingHorizontal: 10,
+                              backgroundColor: selected ? '#ddd' : 'white',
+                            }}>
+                            <Text style={{ fontSize: 16 }}>{item.label}</Text>
+                          </View>
+                        )}
+                      />
+                    </View>
+                  )}
+                />
+                {errors.standard_style && (
+                  <Text className="text-red-500">{errors.standard_style.message}</Text>
+                )}
               </View>
 
-              {/* Decimal Format Toggle */}
               <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
                 <View className="flex-row items-center justify-between">
                   <View>
@@ -144,7 +280,7 @@ export default function ProfileRoute() {
                   </Text>
                 </View>
 
-                <View className="p-4 bg-white shadow-sm">
+                <View className="bg-white p-4 shadow-sm">
                   <View className="flex-row">
                     <Image
                       source={require('../../assets/images/calendar.png')}
@@ -184,6 +320,14 @@ export default function ProfileRoute() {
               <View className="mb-8 rounded-xl bg-white p-4 shadow-sm">
                 <Text className="mb-1 text-gray-600">Support</Text>
                 <Text className="text-gray-800">support@avilog.io</Text>
+              </View>
+
+              <View className="mb-8 rounded-xl bg-white p-4 shadow-sm">
+                <Button
+                  onPress={signOut}
+                  title="Logout"
+                  iconLeft={require('../../assets/images/landing.png')}
+                />
               </View>
             </View>
           </View>
