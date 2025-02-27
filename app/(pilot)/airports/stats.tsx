@@ -1,7 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
-import { AirportChart } from '../../components/airport/AirportChart';
+import { AirportChart } from '../../../components/airport/AirportChart';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 

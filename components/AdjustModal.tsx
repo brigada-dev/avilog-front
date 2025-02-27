@@ -73,8 +73,6 @@ const AdjustModal: React.FC<AdjustModalProps> = ({ visible, onClose, flightSumma
         return acc;
       }, {} as FlightSummary);
 
-      console.log('Updated Adjustments:', syncedAdjustments); // ✅ Debugging
-
       setAdjustments(syncedAdjustments);
     }
   }, [visible, flightSummary]); // ✅ Depend on visibility & flightSummary

@@ -7,138 +7,111 @@ import {
   Image,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import { Feather, FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {
-  parse,
-  format,
-  addDays,
-  differenceInMinutes,
-  setHours,
-  setMinutes,
-  isBefore,
-} from 'date-fns';
+import { format, differenceInMinutes, addDays, isBefore, parse } from 'date-fns';
 import { Button } from '~/components/Button';
 import AdjustModal from '~/components/AdjustModal';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchFlights, createFlight, FlightFormData } from '~/api/flights';
+import { useAuth } from '~/context/auth-context';
+import { Dropdown } from 'react-native-element-dropdown';
 
-// Initial Flight Data (for creating a new flight)
-const initialFlight = {
-  registration: '',
-  type: '',
-  date: format(new Date(), 'dd/MM/yy'), // Today's date
-  from: '',
-  to: '',
-  depTime: format(new Date(), 'HH:mm'), // Current time
-  arrTime: format(new Date(), 'HH:mm'), // Current time
-  duration: '0:00',
-  depFlag: null, // You might want to provide default flags
-  arrFlag: null,
-  landings: 0,
-  approachType: '',
-  timezone: 'UTC', // Or get the device's timezone
-  aircraft: {
-    type: '',
-    imageUrl: null,
-    flightTime: '0:00',
-    flights: 0,
-  },
-  crew: {
-    sic: '',
-    pic: '',
-  },
-  summary: {
-    total: '0:00',
-    sic: '0:00',
-    mp: '0:00',
-    ifr: '0:00',
-    xc: '0:00',
-  },
-};
+const flightSchema = z.object({
+  registration: z.string().min(1, 'Registration is required'),
+  type: z.string().min(1, 'Aircraft type is required'),
+  from: z.string().min(1, 'Departure airport is required'),
+  to: z.string().min(1, 'Arrival airport is required'),
+  depDate: z.date(),
+  arrDate: z.date(),
+  depTime: z.date(),
+  arrTime: z.date(),
+  duration: z.string(),
+  aircraft: z.object({
+    type: z.string(),
+    imageUrl: z.string().nullable(),
+    flightTime: z.string(),
+    flights: z.number(),
+  }),
+  crew: z.object({
+    sic: z.string(),
+    pic: z.string(),
+  }),
+  summary: z.object({
+    total: z.string(),
+    sic: z.string(),
+    mp: z.string(),
+    ifr: z.string(),
+    xc: z.string(),
+  }),
+});
 
 export default function CreateFlight() {
-  const router = useRouter();
-  const [flight, setFlight] = useState(initialFlight);
-
-  const flightDate = parse(flight.date, 'dd/MM/yy', new Date());
-  const [fromDate, setFromDate] = useState(flightDate);
-  const [toDate, setToDate] = useState(flightDate);
-  const [depTime, setDepTime] = useState(parse(flight.depTime, 'HH:mm', fromDate));
-  const [arrTime, setArrTime] = useState(parse(flight.arrTime, 'HH:mm', fromDate));
-  const [duration, setDuration] = useState(flight.duration);
+  const queryClient = useQueryClient();
+  const { token } = useAuth();
   const [isAdjustModalVisible, setAdjustModalVisible] = useState(false);
 
-  const handleSaveAdjustments = (updatedSummary: any) => {
-    setFlight((prev) => ({
-      ...prev,
-      summary: updatedSummary,
-    }));
-    setAdjustModalVisible(false);
-  };
+  const mutation = useMutation({
+    mutationFn: (data: FlightFormData) => createFlight(data, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flights'] });
+    },
+  });
 
-  const handleDateChange = (event: any, selectedDate: Date | undefined, type: 'from' | 'to') => {
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FlightFormData>({
+    resolver: zodResolver(flightSchema),
+    defaultValues: {
+      registration: '',
+      type: '',
+      from: '',
+      to: '',
+      depDate: new Date(),
+      arrDate: new Date(),
+      depTime: new Date(),
+      arrTime: new Date(),
+      duration: '0:00',
+      aircraft: { type: '', imageUrl: null, flightTime: '0:00', flights: 0 },
+      crew: { sic: '', pic: '' },
+      summary: { total: '0:00', sic: '0:00', mp: '0:00', ifr: '0:00', xc: '0:00' },
+    },
+  });
+
+  const depTime = watch('depTime');
+  const arrTime = watch('arrTime');
+
+  const handleTimeChange = (selectedDate: Date | undefined, type: 'depTime' | 'arrTime') => {
     if (!selectedDate) return;
-    type === 'from' ? setFromDate(selectedDate) : setToDate(selectedDate);
-    setFlight({ ...flight, date: format(selectedDate, 'dd/MM/yy') }); // Update flight date
-  };
+    setValue(type, selectedDate);
 
-  const handleTimeChange = (
-    event: any,
-    selectedDate: Date | undefined,
-    type: 'depTime' | 'arrTime'
-  ) => {
-    if (!selectedDate) return;
-
-    if (type === 'depTime') {
-      setDepTime(selectedDate);
-      setFlight({ ...flight, depTime: format(selectedDate, 'HH:mm') });
-    } else {
-      setArrTime(selectedDate);
-      setFlight({ ...flight, arrTime: format(selectedDate, 'HH:mm') });
-
-      if (isBefore(selectedDate, depTime)) {
-        setToDate(addDays(fromDate, 1));
-        setFlight({ ...flight, date: format(addDays(fromDate, 1), 'dd/MM/yy') }); // Update date if arrival is before departure
-      } else {
-        setToDate(fromDate);
-      }
+    if (type === 'arrTime' && isBefore(selectedDate, depTime)) {
+      setValue('depDate', addDays(watch('depDate'), 1));
     }
 
-    let diff = differenceInMinutes(arrTime, depTime);
-    if (diff < 0) {
-      diff += 1440;
-    }
-
-    const hours = Math.floor(diff / 60);
-    const minutes = diff % 60;
-    setDuration(`${hours}:${minutes.toString().padStart(2, '0')}`);
+    const diff = differenceInMinutes(watch('arrTime'), watch('depTime'));
+    const adjustedDiff = diff < 0 ? diff + 1440 : diff;
+    const hours = Math.floor(adjustedDiff / 60);
+    const minutes = adjustedDiff % 60;
+    setValue('duration', `${hours}:${minutes.toString().padStart(2, '0')}`);
   };
 
-  const handleInputChange = (field: string, value: string, nestedField?: string) => {
-    setFlight((prevFlight) => {
-      const updatedFlight = { ...prevFlight };
-      if (nestedField) {
-        updatedFlight[nestedField][field] = value;
-      } else {
-        updatedFlight[field] = value;
-      }
-      return updatedFlight;
-    });
+  const handleSaveFlight = async (data: FlightFormData) => {
+    mutation.mutate(data);
   };
 
-  const handleSaveFlight = () => {
-    // Here you would typically send the 'flight' data to your API
-    console.log('Flight data to be submitted:', flight);
-
-    // Simulate API call delay
-    setTimeout(() => {
-      alert('Flight created successfully!'); // Or a better user feedback mechanism
-      router.push('/flights'); // Navigate back to the flights list or wherever you want
-    }, 1000); // Simulate 1-second delay
-  };
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -154,17 +127,34 @@ export default function CreateFlight() {
 
             <View className="mt-2 flex-row items-center justify-between">
               <Image source={require('../../../assets/images/calendar.png')} style={styles.icon} />
-              <DateTimePicker
-                value={fromDate}
-                mode="date"
-                display="default"
-                onChange={(e, d) => handleDateChange(e, d, 'from')}
+              <Controller
+                control={control}
+                name="depDate"
+                render={({ field: { value } }) => (
+                  <DateTimePicker
+                    value={value}
+                    mode="date"
+                    display="default"
+                    accentColor="#23D013"
+                    themeVariant="light"
+                    onChange={(e, d) => setValue('depDate', d || value)}
+                  />
+                )}
               />
               <View className="h-full w-px bg-black/10" />
-              <DateTimePicker
-                value={toDate}
-                mode="date"
-                onChange={(e, d) => handleDateChange(e, d, 'to')}
+              <Controller
+                control={control}
+                name="arrDate"
+                render={({ field: { value } }) => (
+                  <DateTimePicker
+                    value={value}
+                    mode="date"
+                    display="default"
+                    accentColor="#23D013"
+                    themeVariant="light"
+                    onChange={(e, d) => setValue('arrDate', d || value)}
+                  />
+                )}
               />
               <Image source={require('../../../assets/images/calendar.png')} style={styles.icon} />
             </View>
@@ -173,26 +163,91 @@ export default function CreateFlight() {
                 source={require('../../../assets/images/pin.png')}
                 style={{ height: 32, width: 32 }}
               />
-              <TextInput
-                value={flight.from}
-                className="flex-1 text-lg font-medium"
-                onChangeText={(text) => handleInputChange('from', text)}
+              <Controller
+                control={control}
+                name="from"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    className="text-lg font-medium"
+                    placeholder="From"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
 
-              <Image
+              <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+                <Controller
+                  control={control}
+                  name="from"
+                  render={({ field: { onChange, value = '' } }) => (
+                    <View style={{ marginBottom: 10 }}>
+                      <Text className="mb-2 italic text-gray-600">Standard Style</Text>
+                      <Dropdown
+                        style={{
+                          borderRadius: 8,
+                          justifyContent: 'center', // Centers text inside
+                          backgroundColor: 'white', // Ensures visibility
+                        }}
+                        containerStyle={{
+                          borderRadius: 16,
+                          shadowOffset: { width: 0, height: 0 },
+                          overflow: 'hidden',
+                        }}
+                        placeholderStyle={{
+                          color: 'gray',
+                          fontSize: 16,
+                        }}
+                        selectedTextStyle={{
+                          color: 'black',
+                          fontSize: 16,
+                          paddingTop: 10,
+                        }}
+                        data={}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Select Standard Style"
+                        value={value}
+                        onChange={(item) => {
+                          onChange(item.value);
+                          setValue('from',item.value)
+                        }}
+                        renderItem={(item, selected) => (
+                          <View
+                            style={{
+                              paddingVertical: 12,
+                              paddingHorizontal: 10,
+                              backgroundColor: selected ? '#ddd' : 'white',
+                            }}>
+                            <Text style={{ fontSize: 16 }}>{item.label}</Text>
+                          </View>
+                        )}
+                      />
+                    </View>
+                  )}
+                />
+                {errors.from && (
+                  <Text className="text-red-500">{errors.from.message}</Text>
+                )}
+              </View>
+
+              {/* <Image
                 source={{ uri: flight.depFlag }}
                 style={{ height: 32, width: 32, borderRadius: 60 }}
               />
+              
               <Image source={require('../../../assets/images/paper-plane.png')} />
+
               <Image
                 source={{ uri: flight.arrFlag }}
                 style={{ height: 32, width: 32, borderRadius: 60 }}
-              />
-              <TextInput
+              /> */}
+
+              {/* <TextInput
                 value={flight.to}
                 className="flex-1 text-lg font-medium"
-                onChangeText={(text) => handleInputChange('to', text)}
-              />
+                onChangeText={(text) => setValue('to', text)}
+              /> */}
               <Image
                 source={require('../../../assets/images/pin.png')}
                 style={{ height: 36, width: 36 }}
@@ -207,17 +262,17 @@ export default function CreateFlight() {
                 mode="time"
                 is24Hour={false}
                 display="default"
-                onChange={(e, d) => handleTimeChange(e, d, 'depTime')}
+                onChange={(e, d) => handleTimeChange(d, 'depTime')}
               />
-              <Text className="text-xs text-green-600">{flight.timezone}</Text>
+              {/* <Text className="text-xs text-green-600">{flight.timezone}</Text>
               <Text className="text-lg font-medium">{duration}</Text>
-              <Text className="text-xs text-green-600">{flight.timezone}</Text>
+              <Text className="text-xs text-green-600">{flight.timezone}</Text> */}
               <DateTimePicker
                 value={arrTime}
                 mode="time"
                 is24Hour={false}
                 display="default"
-                onChange={(e, d) => handleTimeChange(e, d, 'arrTime')}
+                onChange={(e, d) => handleTimeChange(d, 'arrTime')}
               />
               <Image source={require('../../../assets/images/klok.png')} style={styles.icon} />
             </View>
@@ -225,7 +280,7 @@ export default function CreateFlight() {
           <View className="mt-6 flex-1 overflow-hidden rounded-xl border border-[#DBDADA] bg-white">
             <View className="flex-row">
               <View className="flex-1">
-                {flight.aircraft.imageUrl ? (
+                {/* {flight.aircraft.imageUrl ? (
                   <Image source={{ uri: flight.aircraft.imageUrl }} style={{ height: 128 }} />
                 ) : (
                   <View className="flex-1 items-center justify-center">
@@ -236,16 +291,16 @@ export default function CreateFlight() {
                       />
                     </View>
                   </View>
-                )}
+                )} */}
               </View>
               <View className="flex-1 p-4">
                 <View>
-                  <Text className="text-lg font-bold">{flight.registration}</Text>
+                  {/* <Text className="text-lg font-bold">{flight.registration}</Text>
                   <TextInput
                     value={flight.aircraft.type}
                     className="text-lg font-medium"
                     onChangeText={(text) => handleInputChange('type', text, 'aircraft')} // Nested field
-                  />
+                  /> */}
                 </View>
                 <View className="flex flex-row gap-2 pt-2">
                   <View className="flex-row items-center">
@@ -253,14 +308,14 @@ export default function CreateFlight() {
                       source={require('../../../assets/images/clock.png')}
                       style={{ height: 24, width: 24 }}
                     />
-                    <Text className="text-sm font-bold">{flight.aircraft.flightTime}</Text>
+                    {/* <Text className="text-sm font-bold">{flight.aircraft.flightTime}</Text> */}
                   </View>
                   <View className="flex-row items-center">
                     <Image
                       source={require('../../../assets/images/landing.png')}
                       style={{ height: 24, width: 24 }}
                     />
-                    <Text className="text-sm font-bold">{flight.aircraft.flights}</Text>
+                    {/* <Text className="text-sm font-bold">{flight.aircraft.flights}</Text> */}
                   </View>
                 </View>
               </View>
@@ -291,7 +346,7 @@ export default function CreateFlight() {
                   <Text>Type of flight</Text>
                   <View className="justify-center">
                     <Ionicons name="list" size={24} color="#23D013" className="absolute right-2" />
-                    <TextInput className="text-center text-xl" value={flight.type} />
+                    {/* <TextInput className="text-center text-xl" value={flight.type} /> */}
                   </View>
                 </View>
                 <View className="mt-2">
@@ -304,7 +359,7 @@ export default function CreateFlight() {
                         color="#23D013"
                         className="absolute right-2"
                       />
-                      <TextInput className="text-center text-xl" value={flight.approachType} />
+                      {/* <TextInput className="text-center text-xl" value={flight.approachType} /> */}
                     </View>
                   </View>
                 </View>
@@ -340,14 +395,14 @@ export default function CreateFlight() {
               <TouchableOpacity className="rounded-xl border border-[#23d013] px-4 py-2">
                 <Text className="text-base font-medium">SIC</Text>
               </TouchableOpacity>
-              <TextInput className="text-base" value={flight.crew.sic} />
+              {/* <TextInput className="text-base" value={flight.crew.sic} /> */}
               <Ionicons name="list" size={24} color="#23D013" className="absolute right-2" />
             </View>
             <View className="mt-2 flex-row items-center gap-4">
               <TouchableOpacity className="rounded-xl border border-[#23d013] px-4 py-2">
                 <Text className="text-base font-medium">PIC</Text>
               </TouchableOpacity>
-              <TextInput className="text-base" value={flight.crew.pic} />
+              {/* <TextInput className="text-base" value={flight.crew.pic} /> */}
               <Ionicons name="list" size={24} color="#23D013" className="absolute right-2" />
             </View>
             <Button
@@ -366,14 +421,14 @@ export default function CreateFlight() {
           <View className="mt-4 rounded-xl bg-white p-4">
             <Text className="text-lg font-semibold">Summary</Text>
             <View className="mt-2 flex-row flex-wrap gap-4">
-              {Object.entries(flight.summary).map(([key, value]) => (
+              {/* {Object.entries(flight.summary).map(([key, value]) => (
                 <View
                   key={key}
                   className="aspect-square size-16 items-center justify-center rounded-full border-4 border-[#81E371]">
                   <Text className="text-base font-bold">{value}</Text>
                   <Text className="text-xs text-gray-500">{key.toUpperCase()}</Text>
                 </View>
-              ))}
+              ))} */}
             </View>
             <View className="mt-3 h-px w-full bg-black/10" />
             <Button
@@ -407,7 +462,7 @@ export default function CreateFlight() {
             />
           </View>
           <View className="mb-6 mt-6 items-center">
-            <TouchableOpacity style={styles.saveButton} onPress={handleSaveFlight}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSubmit(handleSaveFlight)}>
               <Ionicons name="airplane-outline" size={24} color="white" />
               <Text style={styles.saveButtonText}>Create Flight</Text>
             </TouchableOpacity>
@@ -417,8 +472,7 @@ export default function CreateFlight() {
       <AdjustModal
         visible={isAdjustModalVisible}
         onClose={() => setAdjustModalVisible(false)}
-        flightSummary={flight.summary}
-        onSave={handleSaveAdjustments}
+        flightSummary={watch('summary')}
       />
     </>
   );

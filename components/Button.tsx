@@ -11,7 +11,11 @@ export const Button = forwardRef<View, ButtonProps>(
   ({ title, iconLeft, ...touchableProps }, ref) => {
     return (
       <TouchableOpacity ref={ref} {...touchableProps} style={[styles.button, touchableProps.style]}>
-        {iconLeft && <Image source={iconLeft} style={{ width: 24, height: 24, marginRight: 8 }} />}
+        {iconLeft && iconLeft === typeof Image ? (
+          <Image source={iconLeft} style={{ width: 24, height: 24, marginRight: 8 }} />
+        ) : (
+          iconLeft
+        )}
         <Text style={styles.buttonText}>{title}</Text>
       </TouchableOpacity>
     );

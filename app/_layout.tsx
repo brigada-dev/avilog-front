@@ -4,20 +4,29 @@ import { Stack } from 'expo-router';
 import { AuthProvider } from '../context/auth-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthMiddleware } from '~/context/auth-middleware';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { UserProvider } from '~/context/user-context';
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AuthMiddleware>
-          <Stack>
-            <Stack.Screen name="(pilot)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          </Stack>
-        </AuthMiddleware>
-      </AuthProvider>
+      <GestureHandlerRootView>
+        <BottomSheetModalProvider>
+          <AuthProvider>
+            <AuthMiddleware>
+              <UserProvider>
+                <Stack>
+                  <Stack.Screen name="(pilot)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                </Stack>
+              </UserProvider>
+            </AuthMiddleware>
+          </AuthProvider>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
     </QueryClientProvider>
   );
 }

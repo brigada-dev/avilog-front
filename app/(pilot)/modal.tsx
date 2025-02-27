@@ -18,7 +18,7 @@ export default function ModalScreen() {
           NativeWindUI
         </Text>
         <Text color="tertiary" variant="subhead" className="pb-4 text-center">
-          You can install any of the free components from the{' '}
+          You can install any of the free components from the
           <Text
             onPress={() => Linking.openURL('https://nativewindui.com')}
             variant="subhead"
