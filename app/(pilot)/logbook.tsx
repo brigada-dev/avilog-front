@@ -1,13 +1,9 @@
 import { Stack, useRouter } from 'expo-router';
 import React from 'react';
-import { LogbookScreen } from '../../screens/LogbookScreen';
-import { GradientBackground } from '~/components/ui/GradientBackground';
 import { ScrollView, Text, View } from 'react-native';
-import { Container } from '~/components/Container';
 import { FlightEntries } from '~/components/FlightEntries';
 import { StatCards } from '~/components/StatCards';
 import { SecondaryButtons } from '~/components/SecondaryButtons';
-import { BackButton } from '~/components/ui/BackButton';
 import { CircleButtons } from '~/components/CircleButtons';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
@@ -20,8 +16,8 @@ export default function LogbookRoute() {
           headerShown: false,
         }}
       />
-      <Layout variant='primary'>
-        <Header title='Logbook' />
+      <Layout variant="primary">
+        <Header title="Logbook" />
         <SecondaryButtons />
         <CircleButtons />
         <View

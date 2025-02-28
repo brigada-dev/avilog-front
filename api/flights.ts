@@ -32,34 +32,46 @@ export type Flight = {
   updated_at: string;
 };
 
-const flightSchema = z.object({
-  registration: z.string().min(1, 'Registration is required'),
-  type: z.string().min(1, 'Aircraft type is required'),
-  from: z.string().min(1, 'Departure airport is required'),
-  to: z.string().min(1, 'Arrival airport is required'),
-  depDate: z.date(),
-  arrDate: z.date(),
-  depTime: z.date(),
-  arrTime: z.date(),
-  duration: z.string(),
-  aircraft: z.object({
-    type: z.string(),
-    imageUrl: z.string().nullable(),
-    flightTime: z.string(),
-    flights: z.number(),
-  }),
-  crew: z.object({
-    sic: z.string(),
-    pic: z.string(),
-  }),
-  summary: z.object({
-    total: z.string(),
-    sic: z.string(),
-    mp: z.string(),
-    ifr: z.string(),
-    xc: z.string(),
-  }),
+export const flightSchema = z.object({
+  id: z.number().int().positive(),
+  user_id: z.number().int().positive().optional(),
+  aircraft_id: z.number().int().positive(),
+  departure_airport_id: z.number().int().positive(),
+  arrival_airport_id: z.number().int().positive(),
+  departure_date_time: z.string().datetime(),
+  arrival_date_time: z.string().datetime(),
+  block_time: z.number().min(0),
+  day_landings: z.number().int().min(0),
+  night_landings: z.number().int().min(0),
+  type_of_flight: z.string().max(50).nullable(),
+  approach_type: z.string().max(50).nullable(),
+  pic_time: z.number().min(0),
+  sic_time: z.number().min(0),
+  picus_time: z.number().min(0),
+  dual_time: z.number().min(0),
+  ifr_simulated_hood_time: z.number().min(0),
+  cross_country_time: z.number().min(0),
+  relief_pilot_time: z.number().min(0),
+  simulator_time: z.number().min(0),
+  instructor_time: z.number().min(0),
+  multi_pilot_time: z.number().min(0),
+  night_time: z.number().min(0),
+  ifr_time: z.number().min(0),
+  ifr_actual_imc_time: z.number().min(0),
+  signature: z.string().nullable(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
 });
+
+//
+//
+//
+//
+//Update everything ot the new zod schema, command to fetch airports and store in the db
+//
+//
+//
+//
 
 export type FlightFormData = z.infer<typeof flightSchema>;
 

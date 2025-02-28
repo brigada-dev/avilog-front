@@ -3,90 +3,17 @@ import { Text, View, StyleSheet, TouchableOpacity, Modal, Pressable } from 'reac
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, Stack, Link } from 'expo-router';
+import { Stack, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-const aircrafts = [
-  {
-    id: 1,
-    name: 'OY-FSD',
-    type: 'SAAB 2000',
-    engineType: 'Turboprop',
-    multiEngine: true,
-    multiPilot: true,
-    totalTime: '270:30',
-    dayTime: '220:10',
-    nightTime: '50:20',
-    departures: 88,
-    landings: 88,
-    dayDepartures: 70,
-    nightDepartures: 18,
-    dayLandings: 70,
-    nightLandings: 18,
-    imageUrl:
-      'https://www.progressiveautomations.com/cdn/shop/articles/airplanes-actuators_17389e9d-f144-4f38-8d51-f8632a63c39c.jpg?v=1585138977',
-  },
-  {
-    id: 2,
-    name: 'OY-FSC',
-    type: 'SAAB 2000',
-    engineType: 'Turboprop',
-    multiEngine: true,
-    multiPilot: true,
-    totalTime: '110:40',
-    dayTime: '90:30',
-    nightTime: '20:10',
-    departures: 75,
-    landings: 75,
-    dayDepartures: 60,
-    nightDepartures: 15,
-    dayLandings: 60,
-    nightLandings: 15,
-    imageUrl: null,
-  },
-  {
-    id: 3,
-    name: 'OY-FSD',
-    type: 'SAAB 2000',
-    engineType: 'Turboprop',
-    multiEngine: true,
-    multiPilot: true,
-    totalTime: '108:25',
-    dayTime: '88:10',
-    nightTime: '20:15',
-    departures: 88,
-    landings: 88,
-    dayDepartures: 70,
-    nightDepartures: 18,
-    dayLandings: 70,
-    nightLandings: 18,
-    imageUrl:
-      'https://www.progressiveautomations.com/cdn/shop/articles/airplanes-actuators_17389e9d-f144-4f38-8d51-f8632a63c39c.jpg?v=1585138977',
-  },
-  {
-    id: 4,
-    name: 'OY-FSD',
-    type: 'SAAB 2000',
-    engineType: 'Turboprop',
-    multiEngine: true,
-    multiPilot: true,
-    totalTime: '52:10',
-    dayTime: '42:00',
-    nightTime: '10:10',
-    departures: 32,
-    landings: 32,
-    dayDepartures: 25,
-    nightDepartures: 7,
-    dayLandings: 25,
-    nightLandings: 7,
-    imageUrl: null,
-  },
-];
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteAircraft } from '~/api/aircrafts';
+import { useAuth } from '~/context/auth-context';
+import { useAircraftContext } from '~/context/aircraft-context';
 
 export default function AircraftDetails() {
-  const { id } = useLocalSearchParams();
-  const aircraft = aircrafts.find((a) => a.id.toString() === id);
-
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  const { selectedAircraft: aircraft } = useAircraftContext();
   if (!aircraft) {
     return (
       <Layout variant="secondary">
@@ -99,6 +26,14 @@ export default function AircraftDetails() {
   }
   const [modalVisible, setModalVisible] = useState(false);
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteAircraft(Number(aircraft!.id), token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['aircraft'] });
+      setModalVisible(false);
+    },
+  });
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -106,8 +41,8 @@ export default function AircraftDetails() {
         <View className="mb-4 rounded-xl bg-[#F5F5F5] p-4">
           <Header title="Aircraft" />
           <View className="overflow-hidden rounded-xl">
-            {aircraft.imageUrl ? (
-              <Image source={{ uri: aircraft.imageUrl }} style={{ height: 200, width: '100%' }} />
+            {aircraft.image_url ? (
+              <Image source={{ uri: aircraft.image_url }} style={{ height: 200, width: '100%' }} />
             ) : (
               <View className="flex h-48 items-center justify-center bg-gray-300">
                 <Image
@@ -118,7 +53,7 @@ export default function AircraftDetails() {
             )}
           </View>
           <View className="mt-4 rounded-xl border border-[#DBDADA] bg-white p-4">
-            <Text className="text-center text-xl font-bold">{aircraft.name}</Text>
+            <Text className="text-center text-xl font-bold">{aircraft.registration}</Text>
             <View className="mt-2 flex-row justify-between">
               <View className="flex-1 flex-col">
                 <View className="flex-row items-center gap-2">
@@ -133,7 +68,7 @@ export default function AircraftDetails() {
                     source={require('../../../../assets/images/engine.png')}
                     style={{ height: 24, width: 24 }}
                   />
-                  <Text className="text-md">{aircraft.engineType}</Text>
+                  <Text className="text-md">{aircraft.engine_type}</Text>
                 </View>
               </View>
               <View className="h-full w-px bg-[#DBDADA]" />
@@ -144,7 +79,7 @@ export default function AircraftDetails() {
                     style={{ height: 24, width: 24 }}
                   />
                   <Text className="text-md">
-                    {aircraft.multiEngine ? 'Multi Engine' : 'Single Engine'}
+                    {aircraft.is_multi_engine ? 'Multi Engine' : 'Single Engine'}
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
@@ -153,13 +88,12 @@ export default function AircraftDetails() {
                     style={{ height: 24, width: 24 }}
                   />
                   <Text className="text-md">
-                    {aircraft.multiPilot ? 'Multi Pilot' : 'Single Pilot'}
+                    {aircraft.is_multi_pilot ? 'Multi Pilot' : 'Single Pilot'}
                   </Text>
                 </View>
               </View>
             </View>
           </View>
-
           <View className="my-6 h-px bg-[#DBDADA]" />
 
           <View className="rounded-xl border border-[#DBDADA] bg-white p-4">
@@ -171,90 +105,10 @@ export default function AircraftDetails() {
                 />
                 <Text className="text-center text-lg font-bold">Total time</Text>
               </View>
-              <Text className="text-center text-sm">{aircraft.totalTime} h</Text>
-            </View>
-            <View className="mt-2 flex-row justify-between">
-              <View className="relative rounded-xl border border-[#DBDADA] px-10 py-3">
-                <Image
-                  source={require('../../../../assets/images/sun.png')}
-                  style={{ height: 24, width: 24, position: 'absolute', top: 16, left: 16 }}
-                />
-                <View>
-                  <Text className="text-center text-lg font-semibold">Day</Text>
-                  <Text className="text-c enter text-base">{aircraft.dayTime} h</Text>
-                </View>
-              </View>
-              <View className="rounded-xl border border-[#DBDADA] px-10 py-3">
-                <Image
-                  source={require('../../../../assets/images/fog.png')}
-                  style={{ height: 24, width: 24, position: 'absolute', top: 16, left: 16 }}
-                />
-                <View>
-                  <Text className="text-center text-lg font-semibold">Night</Text>
-                  <Text className="text-center text-base">{aircraft.nightTime} h</Text>
-                </View>
-              </View>
+              <Text className="text-center text-sm">40 h</Text>
             </View>
           </View>
 
-          <View className="my-6 h-px bg-[#DBDADA]" />
-
-          <View className="flex-row items-center justify-between">
-            <View className="rounded-xl border border-[#DBDADA] bg-white p-4">
-              <View className="flex-col items-center justify-center gap-2">
-                <Text className="text-lg font-bold">Departures</Text>
-                <Text className="text-lg font-bold">{aircraft.departures}</Text>
-                <View className="rounded-xl border border-[#DBDADA] px-12 py-3">
-                  <Image
-                    source={require('../../../../assets/images/fog.png')}
-                    style={{ height: 24, width: 24, position: 'absolute', top: 16, left: 16 }}
-                  />
-                  <View>
-                    <Text className="text-center text-lg font-semibold">Day</Text>
-                    <Text className="text-center text-base">{aircraft.dayDepartures}</Text>
-                  </View>
-                </View>
-                <View className="rounded-xl border border-[#DBDADA] px-10 py-3">
-                  <Image
-                    source={require('../../../../assets/images/fog.png')}
-                    style={{ height: 24, width: 24, position: 'absolute', top: 16, left: 16 }}
-                  />
-                  <View>
-                    <Text className="text-center text-lg font-semibold">Night</Text>
-                    <Text className="text-center text-base">{aircraft.nightDepartures}</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <View className="my-6 h-px bg-[#DBDADA]" />
-
-            <View className="rounded-xl border border-[#DBDADA] bg-white p-4">
-              <View className="flex-1 flex-col items-center justify-center gap-2">
-                <Text className="text-lg font-bold">Landings</Text>
-                <Text className="text-lg font-bold">{aircraft.dayLandings}</Text>
-                <View className="rounded-xl border border-[#DBDADA] px-12 py-3">
-                  <Image
-                    source={require('../../../../assets/images/fog.png')}
-                    style={{ height: 24, width: 24, position: 'absolute', top: 16, left: 16 }}
-                  />
-                  <View>
-                    <Text className="text-center text-lg font-semibold">Day</Text>
-                    <Text className="text-center text-base">{aircraft.dayLandings}</Text>
-                  </View>
-                </View>
-                <View className="rounded-xl border border-[#DBDADA] px-10 py-3">
-                  <Image
-                    source={require('../../../../assets/images/fog.png')}
-                    style={{ height: 24, width: 24, position: 'absolute', top: 16, left: 16 }}
-                  />
-                  <View>
-                    <Text className="text-center text-lg font-semibold">Night</Text>
-                    <Text className="text-center text-base">{aircraft.nightLandings}</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
           <View className="my-6 h-px bg-[#DBDADA]" />
 
           <View className="flex-row justify-between">
@@ -263,7 +117,7 @@ export default function AircraftDetails() {
                 <Text style={styles.buttonText}>Show flights</Text>
               </TouchableOpacity>
             </Link>
-            <Link href={`/aircrafts/${id}/edit`} asChild>
+            <Link href={`/(pilot)/aircrafts/${aircraft.id}/edit`} asChild replace>
               <TouchableOpacity style={styles.editBtn}>
                 <Text style={styles.buttonText}>Edit aircraft</Text>
               </TouchableOpacity>
@@ -277,6 +131,7 @@ export default function AircraftDetails() {
           </View>
         </View>
       </Layout>
+
       <Modal
         transparent
         animationType="fade"
@@ -296,13 +151,8 @@ export default function AircraftDetails() {
 
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: '#AD1519', paddingVertical: 16, borderRadius: 16 },
-                  ]}
-                  onPress={() => {
-                    setModalVisible(false);
-                  }}>
+                  style={[styles.modalButton, { backgroundColor: '#AD1519' }]}
+                  onPress={() => deleteMutation.mutate()}>
                   <Text style={styles.modalButtonText}>Delete aircraft</Text>
                 </TouchableOpacity>
               </View>
@@ -313,6 +163,7 @@ export default function AircraftDetails() {
     </>
   );
 }
+
 const styles = StyleSheet.create({
   button: {
     backgroundColor: '#4DD740',
