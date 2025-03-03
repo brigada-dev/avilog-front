@@ -17,8 +17,6 @@ export default function AddAirport() {
       Alert.alert('Error', 'All fields are required.');
       return;
     }
-    
-    console.log('Adding new airport:', { name, code, city, country });
     router.push('/airports');
   };
 
@@ -29,20 +27,38 @@ export default function AddAirport() {
         <Header title="Add Airport" />
         <View className="p-4">
           <Text className="text-lg font-semibold">Airport Name</Text>
-          <TextInput className="bg-gray-100 p-3 rounded-lg text-lg" value={name} onChangeText={setName} />
+          <TextInput
+            className="rounded-lg bg-gray-100 p-3 text-lg"
+            value={name}
+            onChangeText={setName}
+          />
 
-          <Text className="text-lg font-semibold mt-4">Airport Code</Text>
-          <TextInput className="bg-gray-100 p-3 rounded-lg text-lg" value={code} onChangeText={setCode} />
+          <Text className="mt-4 text-lg font-semibold">Airport Code</Text>
+          <TextInput
+            className="rounded-lg bg-gray-100 p-3 text-lg"
+            value={code}
+            onChangeText={setCode}
+          />
 
-          <Text className="text-lg font-semibold mt-4">City</Text>
-          <TextInput className="bg-gray-100 p-3 rounded-lg text-lg" value={city} onChangeText={setCity} />
+          <Text className="mt-4 text-lg font-semibold">City</Text>
+          <TextInput
+            className="rounded-lg bg-gray-100 p-3 text-lg"
+            value={city}
+            onChangeText={setCity}
+          />
 
-          <Text className="text-lg font-semibold mt-4">Country</Text>
-          <TextInput className="bg-gray-100 p-3 rounded-lg text-lg" value={country} onChangeText={setCountry} />
+          <Text className="mt-4 text-lg font-semibold">Country</Text>
+          <TextInput
+            className="rounded-lg bg-gray-100 p-3 text-lg"
+            value={country}
+            onChangeText={setCountry}
+          />
 
-          <TouchableOpacity className="bg-blue-500 p-4 rounded-lg flex-row items-center justify-center mt-6" onPress={handleSave}>
+          <TouchableOpacity
+            className="mt-6 flex-row items-center justify-center rounded-lg bg-blue-500 p-4"
+            onPress={handleSave}>
             <Ionicons name="checkmark-circle" size={24} color="white" />
-            <Text className="text-white text-lg ml-2 font-semibold">Save Airport</Text>
+            <Text className="ml-2 text-lg font-semibold text-white">Save Airport</Text>
           </TouchableOpacity>
         </View>
       </Layout>

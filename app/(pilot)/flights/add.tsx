@@ -17,15 +17,13 @@ import { Header } from '~/components/Header';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { differenceInMinutes } from 'date-fns';
 import { Button } from '~/components/Button';
-import AdjustModal from '~/components/AdjustModal';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFlight, fetchFlights, FlightFormData, flightSchema } from '~/api/flights';
 import { useAuth } from '~/context/auth-context';
-import { Dropdown } from 'react-native-element-dropdown';
-import { airports } from '~/lib/exports';
 import { fetchAircrafts } from '~/api/aircrafts';
+import AirportDropdown from '~/components/airport/airport-dropdown';
 
 export default function CreateFlight() {
   const queryClient = useQueryClient();
@@ -45,13 +43,12 @@ export default function CreateFlight() {
     queryFn: () => fetchAircrafts(token!),
   });
 
-  // Create Flight Mutation
   const mutation = useMutation({
     mutationFn: (data: FlightFormData) => createFlight(data, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flights'] });
     },
-    onError: (error) => console.log(error)
+    onError: (error) => console.log(error),
   });
 
   const {
@@ -63,23 +60,20 @@ export default function CreateFlight() {
   } = useForm<FlightFormData>({
     resolver: zodResolver(flightSchema),
     defaultValues: {
-      registration: '',
-      type: '',
-      from: '',
-      to: '',
-      depDate: new Date(),
-      arrDate: new Date(),
-      depTime: new Date(),
-      arrTime: new Date(),
-      duration: '0:00',
-      aircraft_id: null,
-      crew: { sic: '', pic: '' },
-      summary: { total: '0:00', sic: '0:00', mp: '0:00', ifr: '0:00', xc: '0:00' },
+      aircraft_id: undefined,
+      departure_airport_id: undefined,
+      arrival_airport_id: undefined,
+      departure_date_time: new Date().toISOString(),
+      arrival_date_time: new Date().toISOString(),
+      day_landings: 0,
+      night_landings: 0,
+      type_of_flight: null,
+      approach_type: '',
     },
   });
-  console.log(errors)
-  const depTime = watch('depTime');
-  const arrTime = watch('arrTime');
+
+  const depTime = watch('departure_date_time');
+  const arrTime = watch('arrival_date_time');
 
   const minutesToHours = (minutes: number) => {
     if (minutes < 0) return '0:00';
@@ -96,7 +90,6 @@ export default function CreateFlight() {
     mutation.mutate({ ...data, aircraft_id: selectedAircraft });
   };
 
-  const { height, width } = Dimensions.get('screen');
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -115,15 +108,17 @@ export default function CreateFlight() {
               <View>
                 <Controller
                   control={control}
-                  name="depDate"
+                  name="departure_date_time"
                   render={({ field: { value } }) => (
                     <DateTimePicker
-                      value={value}
+                      value={new Date(value)}
                       mode="date"
                       display="default"
                       accentColor="#23D013"
                       themeVariant="light"
-                      onChange={(e, d) => setValue('depDate', d || value)}
+                      onChange={(e, d) =>
+                        setValue('departure_date_time', d?.toLocaleDateString() || value)
+                      }
                     />
                   )}
                 />
@@ -132,15 +127,17 @@ export default function CreateFlight() {
               <View>
                 <Controller
                   control={control}
-                  name="arrDate"
+                  name="arrival_date_time"
                   render={({ field: { value } }) => (
                     <DateTimePicker
-                      value={value}
+                      value={new Date(value)}
                       mode="date"
                       display="default"
                       accentColor="#23D013"
                       themeVariant="light"
-                      onChange={(e, d) => setValue('arrDate', d || value)}
+                      onChange={(e, d) =>
+                        setValue('arrival_date_time', d?.toLocaleDateString() || value)
+                      }
                     />
                   )}
                 />
@@ -155,55 +152,9 @@ export default function CreateFlight() {
               <View className="flex-1">
                 <Controller
                   control={control}
-                  name="from"
+                  name="departure_airport_id"
                   render={({ field: { onChange, value } }) => (
-                    <View style={{ marginBottom: 10 }}>
-                      <View className="flex-1">
-                        <Dropdown
-                          style={{
-                            borderRadius: 8,
-                            justifyContent: 'center',
-                          }}
-                          mode="modal"
-                          search
-                          inputSearchStyle={{ borderRadius: 12 }}
-                          containerStyle={{
-                            borderRadius: 16,
-                            width: width - 30,
-                            height: height - 240,
-                            overflow: 'hidden',
-                          }}
-                          placeholderStyle={{
-                            color: 'gray',
-                            fontSize: 16,
-                          }}
-                          selectedTextStyle={{
-                            color: 'black',
-                            fontSize: 16,
-                            paddingTop: 10,
-                          }}
-                          data={airports}
-                          labelField="label"
-                          valueField="value"
-                          placeholder="From"
-                          value={value}
-                          onChange={(item) => {
-                            onChange(item.value);
-                            setValue('from', item.value);
-                          }}
-                          renderItem={(item, selected) => (
-                            <View
-                              style={{
-                                paddingVertical: 12,
-                                paddingHorizontal: 10,
-                                backgroundColor: selected ? '#ddd' : 'white',
-                              }}>
-                              <Text style={{ fontSize: 16 }}>{item.label}</Text>
-                            </View>
-                          )}
-                        />
-                      </View>
-                    </View>
+                    <AirportDropdown value={value} onChange={onChange} />
                   )}
                 />
               </View>
@@ -214,53 +165,9 @@ export default function CreateFlight() {
               <View className="flex-1">
                 <Controller
                   control={control}
-                  name="to"
-                  render={({ field: { onChange, value = '' } }) => (
-                    <View style={{ marginBottom: 10 }}>
-                      <Dropdown
-                        style={{
-                          borderRadius: 8,
-                          justifyContent: 'center',
-                        }}
-                        mode="modal"
-                        search
-                        inputSearchStyle={{ borderRadius: 12 }}
-                        containerStyle={{
-                          borderRadius: 16,
-                          width: width - 30,
-                          height: height - 240,
-                          overflow: 'hidden',
-                        }}
-                        placeholderStyle={{
-                          color: 'gray',
-                          fontSize: 16,
-                        }}
-                        selectedTextStyle={{
-                          color: 'black',
-                          fontSize: 16,
-                          paddingTop: 10,
-                        }}
-                        data={airports}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="To"
-                        value={value}
-                        onChange={(item) => {
-                          onChange(item.value);
-                          setValue('to', item.value);
-                        }}
-                        renderItem={(item, selected) => (
-                          <View
-                            style={{
-                              paddingVertical: 12,
-                              paddingHorizontal: 10,
-                              backgroundColor: selected ? '#DBDADA' : 'white',
-                            }}>
-                            <Text style={{ fontSize: 16 }}>{item.label}</Text>
-                          </View>
-                        )}
-                      />
-                    </View>
+                  name="arrival_airport_id"
+                  render={({ field: { onChange, value } }) => (
+                    <AirportDropdown value={value} onChange={onChange} />
                   )}
                 />
               </View>
@@ -268,7 +175,9 @@ export default function CreateFlight() {
                 source={require('../../../assets/images/pin.png')}
                 style={{ height: 36, width: 36 }}
               />
-              {errors.from && <Text className="text-red-500">{errors.from.message}</Text>}
+              {errors.departure_airport_id && (
+                <Text className="text-red-500">{errors.departure_airport_id.message}</Text>
+              )}
             </View>
             <View className="mt-2 h-px w-full bg-black/10" />
 
@@ -276,15 +185,17 @@ export default function CreateFlight() {
               <Image source={require('../../../assets/images/klok.png')} style={styles.icon} />
               <Controller
                 control={control}
-                name="depTime"
+                name="departure_date_time"
                 render={({ field: { value } }) => (
                   <DateTimePicker
-                    value={value}
+                    value={new Date(value)}
                     mode="time"
                     display="default"
                     accentColor="#23D013"
                     themeVariant="light"
-                    onChange={(e, d) => setValue('depTime', d || value)}
+                    onChange={(e, d) =>
+                      setValue('departure_date_time', d?.toLocaleDateString() || value)
+                    }
                   />
                 )}
               />
@@ -295,15 +206,17 @@ export default function CreateFlight() {
               <Text className="text-xs text-green-600">UTC</Text>
               <Controller
                 control={control}
-                name="arrTime"
+                name="arrival_date_time"
                 render={({ field: { value } }) => (
                   <DateTimePicker
-                    value={value}
+                    value={new Date(value)}
                     mode="time"
                     display="default"
                     accentColor="#23D013"
                     themeVariant="light"
-                    onChange={(e, d) => setValue('arrTime', d || value)}
+                    onChange={(e, d) =>
+                      setValue('arrival_date_time', d?.toLocaleDateString() || value)
+                    }
                   />
                 )}
               />
@@ -374,18 +287,18 @@ export default function CreateFlight() {
                     <Ionicons name="list" size={24} color="#23D013" className="absolute right-2" />
                     <Controller
                       control={control}
-                      name="type"
+                      name="type_of_flight"
                       render={({ field: { onChange, value } }) => (
                         <TextInput
                           className="text-center text-xl"
-                          value={value}
+                          value={value ?? ''}
                           onChangeText={onChange}
                         />
                       )}
                     />
-                           {errors.type && (
-                            <Text className="text-red-500">{errors.type.message}</Text>
-                          )}
+                    {errors.type_of_flight && (
+                      <Text className="text-red-500">{errors.type_of_flight.message}</Text>
+                    )}
                   </View>
                 </View>
                 <View className="mt-2">
@@ -426,13 +339,13 @@ export default function CreateFlight() {
             </View>
           </View>
 
-          <View className="mt-2 flex-row items-center gap-4">
+          {/* <View className="mt-2 flex-row items-center gap-4">
             <TouchableOpacity className="rounded-xl border border-[#23d013] px-4 py-2">
               <Text className="text-base font-medium">SIC</Text>
             </TouchableOpacity>
             <Controller
               control={control}
-              name="crew.sic"
+              name=""
               render={({ field: { onChange, value } }) => (
                 <TextInput className="flex-1 text-base" value={value} onChangeText={onChange} />
               )}
@@ -475,9 +388,7 @@ export default function CreateFlight() {
                   <Text className="text-xs text-gray-500">IFR</Text>
                 </View>
               )}
-            />
-
-            <View className="mt-3 h-px w-full bg-black/10" />
+            /> <View className="mt-3 h-px w-full bg-black/10" />
             <Button
               title="Adjust"
               iconLeft={require('../../../assets/images/edit.png')}
@@ -490,7 +401,7 @@ export default function CreateFlight() {
                 marginTop: 12,
               }}
             />
-          </View>
+          </View> */}
           <View className="mt-4 rounded-xl bg-white p-4">
             <View className="mt-2 flex-row flex-wrap gap-4">
               <TextInput className="flex-1 py-2 font-bold text-gray-800" />
@@ -516,11 +427,11 @@ export default function CreateFlight() {
           </View>
         </ScrollView>
       </Layout>
-      <AdjustModal
+      {/* <AdjustModal
         visible={isAdjustModalVisible}
         onClose={() => setAdjustModalVisible(false)}
         flightSummary={watch('summary')}
-      />
+      /> */}
     </>
   );
 }

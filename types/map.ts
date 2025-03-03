@@ -1,15 +1,14 @@
-export interface Airport {
-    id: string
-    name: string
-    code: string
-    latitude: number
-    longitude: number
-  }
-  
-  export interface FlightRoute {
-    id: string
-    origin: Airport
-    destination: Airport
-  }
-  
-  
+export type Airport = {
+  id: number;
+  name: string;
+  icao: string;
+  iata?: string;
+  faa?: string;
+  easa?: string;
+};
+
+export interface FlightRoute {
+  id: string;
+  origin: Airport;
+  destination: Airport;
+}

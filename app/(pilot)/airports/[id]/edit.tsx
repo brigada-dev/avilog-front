@@ -20,7 +20,6 @@ export default function EditAirport() {
   const [country, setCountry] = useState(airport?.country || '');
 
   const handleUpdate = () => {
-    console.log('Updating airport:', { id, name, code, city, country });
     router.push('/airports');
   };
 

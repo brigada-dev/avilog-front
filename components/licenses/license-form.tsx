@@ -31,7 +31,6 @@ export function LicenseForm() {
     queryKey: ['licenses'],
     queryFn: () => fetchLicenses(token!),
   });
-  console.log('Licenses: ', licenses);
   const {
     control,
     handleSubmit,

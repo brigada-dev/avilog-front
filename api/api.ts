@@ -1,5 +1,4 @@
 export const api = async (endpoint: string, token?: string, options: RequestInit = {}) => {
-  console.log(endpoint, token, options)
   const response = await fetch(`${process.env.EXPO_PUBLIC_LARAVEL_API}/api${endpoint}`, {
     ...options,
     headers: {
@@ -10,7 +9,6 @@ export const api = async (endpoint: string, token?: string, options: RequestInit
   });
 
   const data = await response.json();
-  console.log(data)
   if (!response.ok) {
     throw new Error(data.message || 'Something went wrong');
   }

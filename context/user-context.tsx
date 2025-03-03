@@ -23,7 +23,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateStandard = async (newStandard: "ICAO" | "FAA" | "EASA" | "CAA" | "DGCA") => {
     setStandardStyle(newStandard);
-    await AsyncStorage.setItem("userStandard", newStandard); // ✅ Store as a single string
+    await AsyncStorage.setItem("userStandard", newStandard);
   };
 
   return (
