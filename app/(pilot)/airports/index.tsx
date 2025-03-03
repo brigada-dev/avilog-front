@@ -1,67 +1,48 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-} from 'react-native';
-import { Stack, Link } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View } from 'react-native';
+import { AirportChart } from '../../../components/airport/AirportChart';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
+import { Stack } from 'expo-router';
 
-const airports = [
-  { id: 1, name: 'John F. Kennedy', code: 'JFK', city: 'New York', country: 'USA', flag: 'https://flagcdn.com/w40/us.png' },
-  { id: 2, name: 'Heathrow Airport', code: 'LHR', city: 'London', country: 'UK', flag: 'https://flagcdn.com/w40/gb.png' },
-  { id: 3, name: 'Tokyo Haneda', code: 'HND', city: 'Tokyo', country: 'Japan', flag: 'https://flagcdn.com/w40/jp.png' },
+const airportData = [
+  { code: 'ESMS', country: 'SE', visits: 27, flagUrl: 'https://flagcdn.com/w40/se.png' },
+  { code: 'EDDP', country: 'DE', visits: 12, flagUrl: 'https://flagcdn.com/w40/de.png' },
+  { code: 'LHDC', country: 'HU', visits: 8, flagUrl: 'https://flagcdn.com/w40/hu.png' },
+  { code: 'LBSF', country: 'BG', visits: 8, flagUrl: 'https://flagcdn.com/w40/bg.png' },
+  { code: 'ESGG', country: 'SE', visits: 7, flagUrl: 'https://flagcdn.com/w40/se.png' },
+  { code: 'EGJJ', country: 'GB', visits: 6, flagUrl: 'https://flagcdn.com/w40/gb.png' },
+  { code: 'EDDN', country: 'DE', visits: 6, flagUrl: 'https://flagcdn.com/w40/de.png' },
+  { code: 'ETNL', country: 'DE', visits: 6, flagUrl: 'https://flagcdn.com/w40/de.png' },
+  { code: 'EDLV', country: 'DE', visits: 5, flagUrl: 'https://flagcdn.com/w40/de.png' },
+  { code: 'EBLG', country: 'BE', visits: 5, flagUrl: 'https://flagcdn.com/w40/be.png' },
+  { code: 'LECO', country: 'ES', visits: 4, flagUrl: 'https://flagcdn.com/w40/es.png' },
+  { code: 'EKRK', country: 'DK', visits: 4, flagUrl: 'https://flagcdn.com/w40/dk.png' },
+  { code: 'ESKS', country: 'SE', visits: 4, flagUrl: 'https://flagcdn.com/w40/se.png' },
+  { code: 'EPGD', country: 'PL', visits: 4, flagUrl: 'https://flagcdn.com/w40/pl.png' },
+  { code: 'EETN', country: 'EE', visits: 4, flagUrl: 'https://flagcdn.com/w40/ee.png' },
+  { code: 'LDOS', country: 'HR', visits: 4, flagUrl: 'https://flagcdn.com/w40/hr.png' },
+  { code: 'LHBP', country: 'HU', visits: 2, flagUrl: 'https://flagcdn.com/w40/hu.png' },
+  { code: 'EKBI', country: 'DK', visits: 2, flagUrl: 'https://flagcdn.com/w40/dk.png' },
+  { code: 'EVRA', country: 'LV', visits: 2, flagUrl: 'https://flagcdn.com/w40/lv.png' },
+  { code: 'LGKO', country: 'GR', visits: 2, flagUrl: 'https://flagcdn.com/w40/gr.png' },
+  { code: 'EBOS', country: 'BE', visits: 1, flagUrl: 'https://flagcdn.com/w40/be.png' },
+  { code: 'LIMC', country: 'IT', visits: 1, flagUrl: 'https://flagcdn.com/w40/it.png' },
+  { code: 'LTFE', country: 'TR', visits: 1, flagUrl: 'https://flagcdn.com/w40/tr.png' },
+  { code: 'EDDW', country: 'DE', visits: 1, flagUrl: 'https://flagcdn.com/w40/de.png' },
+  { code: 'LOWS', country: 'AT', visits: 1, flagUrl: 'https://flagcdn.com/w40/at.png' },
+  { code: 'EDDL', country: 'DE', visits: 1, flagUrl: 'https://flagcdn.com/w40/de.png' },
 ];
 
-export default function AirportList() {
-  const [search, setSearch] = useState('');
-
-  const filteredAirports = airports.filter((airport) =>
-    airport.name.toLowerCase().includes(search.toLowerCase()) ||
-    airport.code.toLowerCase().includes(search.toLowerCase())
-  );
-
+export default function AirportsRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <Layout variant="primary">
         <Header title="Airports" />
-        <View className="flex-row items-center bg-gray-100 p-3 rounded-lg my-3">
-          <Ionicons name="search" size={24} color="gray" className="ml-2" />
-          <TextInput
-            className="flex-1 ml-2 text-base"
-            placeholder="Search airport..."
-            onChangeText={setSearch}
-            value={search}
-          />
+        <View>
+          <AirportChart data={airportData} />
         </View>
-
-        <ScrollView>
-          {filteredAirports.map((airport) => (
-            <Link key={airport.id} href={`/airports/${airport.id}`} asChild>
-              <TouchableOpacity className="flex-row items-center bg-white p-4 rounded-lg mb-2 shadow">
-                <Image source={{ uri: airport.flag }} className="w-10 h-7 rounded" />
-                <View className="ml-4 flex-1">
-                  <Text className="text-lg font-semibold">{airport.name}</Text>
-                  <Text className="text-gray-500">{airport.code} - {airport.city}, {airport.country}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={24} color="gray" />
-              </TouchableOpacity>
-            </Link>
-          ))}
-        </ScrollView>
-
-        <Link href="/airports/add" asChild>
-          <TouchableOpacity className="bg-green-500 p-4 rounded-lg flex-row items-center justify-center mt-4">
-            <Ionicons name="add-circle" size={24} color="white" />
-            <Text className="text-white text-lg ml-2 font-semibold">Add Airport</Text>
-          </TouchableOpacity>
-        </Link>
       </Layout>
     </>
   );

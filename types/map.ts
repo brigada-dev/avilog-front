@@ -5,6 +5,7 @@ export type Airport = {
   iata?: string;
   faa?: string;
   easa?: string;
+  country: string;
 };
 
 export interface FlightRoute {

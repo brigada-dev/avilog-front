@@ -23,21 +23,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFlight, fetchFlights, FlightFormData, flightSchema } from '~/api/flights';
 import { useAuth } from '~/context/auth-context';
 import { fetchAircrafts } from '~/api/aircrafts';
-import AirportDropdown from '~/components/airport/airport-dropdown';
+import { AirportSelectionSheet } from '~/components/airport/airport-selection-sheet';
+import { AircraftCard } from '~/components/aircraft/AircraftCard';
 
 export default function CreateFlight() {
   const queryClient = useQueryClient();
   const { token } = useAuth();
-  const [isAdjustModalVisible, setAdjustModalVisible] = useState(false);
   const [selectedAircraft, setSelectedAircraft] = useState<number | null>(null);
+  const [departureAirport, setDepartureAirport] = useState<string | null>();
+  const [arrivalAirport, setArrivalAirport] = useState<string | null>();
 
-  // Fetch flights
-  const { data: flights, isLoading: isFlightsLoading } = useQuery({
-    queryKey: ['flights'],
-    queryFn: () => fetchFlights(token!),
-  });
+  // const { data: flights, isLoading: isFlightsLoading } = useQuery({
+  //   queryKey: ['flights'],
+  //   queryFn: () => fetchFlights(token!),
+  // });
 
-  // Fetch aircrafts
   const { data: aircrafts, isLoading: isAircraftLoading } = useQuery({
     queryKey: ['aircrafts'],
     queryFn: () => fetchAircrafts(token!),
@@ -103,7 +103,7 @@ export default function CreateFlight() {
               <Text className="text-base font-normal">Arrival</Text>
             </View>
 
-            <View className="mt-2 flex-row items-center justify-between">
+            <View className="mt-2 flex-row items-center gap-2">
               <Image source={require('../../../assets/images/calendar.png')} style={styles.icon} />
               <View>
                 <Controller
@@ -116,9 +116,11 @@ export default function CreateFlight() {
                       display="default"
                       accentColor="#23D013"
                       themeVariant="light"
-                      onChange={(e, d) =>
-                        setValue('departure_date_time', d?.toLocaleDateString() || value)
-                      }
+                      onChange={(e, d) => {
+                        if (d) {
+                          setValue('departure_date_time', d.toISOString());
+                        }
+                      }}
                     />
                   )}
                 />
@@ -135,46 +137,65 @@ export default function CreateFlight() {
                       display="default"
                       accentColor="#23D013"
                       themeVariant="light"
-                      onChange={(e, d) =>
-                        setValue('arrival_date_time', d?.toLocaleDateString() || value)
-                      }
+                      onChange={(e, d) => {
+                        if (d) {
+                          setValue('arrival_date_time', d.toISOString());
+                        }
+                      }}
                     />
                   )}
                 />
               </View>
               <Image source={require('../../../assets/images/calendar.png')} style={styles.icon} />
             </View>
-            <View className="mt-4 flex-row items-center justify-between">
-              <Image
-                source={require('../../../assets/images/pin.png')}
-                style={{ height: 32, width: 32 }}
-              />
+            <View className="mt-4 flex-row items-center justify-between gap-1">
               <View className="flex-1">
                 <Controller
                   control={control}
                   name="departure_airport_id"
                   render={({ field: { onChange, value } }) => (
-                    <AirportDropdown value={value} onChange={onChange} />
+                    <AirportSelectionSheet
+                      value={value}
+                      onChange={onChange}
+                      setDepartureAirport={setDepartureAirport}
+                    />
                   )}
                 />
               </View>
+              {departureAirport && (
+                <Image
+                  source={{
+                    uri: `https://flagcdn.com/w40/${departureAirport}.png`,
+                  }}
+                  style={{ width: 32, height: 24, borderRadius: 6 }}
+                />
+              )}
               <Image
                 source={require('../../../assets/images/paper-plane.png')}
                 style={{ height: 32, width: 32 }}
               />
+              {arrivalAirport && (
+                <Image
+                  source={{
+                    uri: `https://flagcdn.com/w40/${arrivalAirport}.png`,
+                  }}
+                  style={{ width: 32, height: 24, borderRadius: 6 }}
+                />
+              )}
               <View className="flex-1">
                 <Controller
                   control={control}
                   name="arrival_airport_id"
                   render={({ field: { onChange, value } }) => (
-                    <AirportDropdown value={value} onChange={onChange} />
+                    <AirportSelectionSheet
+                      value={value}
+                      onChange={onChange}
+                      setArrivalAirport={setArrivalAirport}
+                    />
                   )}
                 />
               </View>
-              <Image
-                source={require('../../../assets/images/pin.png')}
-                style={{ height: 36, width: 36 }}
-              />
+
               {errors.departure_airport_id && (
                 <Text className="text-red-500">{errors.departure_airport_id.message}</Text>
               )}
@@ -193,9 +214,13 @@ export default function CreateFlight() {
                     display="default"
                     accentColor="#23D013"
                     themeVariant="light"
-                    onChange={(e, d) =>
-                      setValue('departure_date_time', d?.toLocaleDateString() || value)
-                    }
+                    onChange={(e, t) => {
+                      if (t) {
+                        const updatedDate = new Date(value);
+                        updatedDate.setHours(t.getHours(), t.getMinutes());
+                        setValue('departure_date_time', updatedDate.toISOString());
+                      }
+                    }}
                   />
                 )}
               />
@@ -214,51 +239,53 @@ export default function CreateFlight() {
                     display="default"
                     accentColor="#23D013"
                     themeVariant="light"
-                    onChange={(e, d) =>
-                      setValue('arrival_date_time', d?.toLocaleDateString() || value)
-                    }
+                    onChange={(e, t) => {
+                      if (t) {
+                        const updatedDate = new Date(value);
+                        updatedDate.setHours(t.getHours(), t.getMinutes());
+                        setValue('arrival_date_time', updatedDate.toISOString());
+                      }
+                    }}
                   />
                 )}
               />
               <Image source={require('../../../assets/images/klok.png')} style={styles.icon} />
             </View>
-            <View className="mt-6 flex-1 overflow-hidden rounded-xl border border-[#DBDADA] bg-white">
-              <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
-                <Text className="mb-2 text-base font-normal">Select Aircraft</Text>
-                <Controller
-                  control={control}
-                  name="aircraft_id"
-                  render={({ field: { value, onChange } }) => (
-                    <FlatList
-                      horizontal
-                      data={aircrafts}
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          className={`mx-1 rounded-lg border p-2 ${
-                            value === item.id ? 'border-green-600' : 'border-gray-300'
-                          }`}
-                          onPress={() => onChange(item.id)}>
-                          <Image
-                            source={
-                              item.image_url
-                                ? { uri: item.image_url }
-                                : require('../../../assets/images/image_placeholder.png')
-                            }
-                            style={{ width: 80, height: 80, borderRadius: 8 }}
-                          />
-                          <Text className="mt-1 text-center">{item.registration}</Text>
-                        </TouchableOpacity>
-                      )}
-                      showsHorizontalScrollIndicator={false}
-                    />
-                  )}
-                />
-                {errors.aircraft_id && (
-                  <Text className="text-red-500">{errors.aircraft_id.message}</Text>
+          </View>
+
+          <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl">
+              <Text className="mb-2 text-base font-normal">Aircraft</Text>
+              <Controller
+                control={control}
+                name="aircraft_id"
+                render={({ field: { value, onChange } }) => (
+                  <FlatList
+                    horizontal
+                    data={aircrafts}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        className={`mx-1 rounded-xl border p-2 ${
+                          value === item.id ? 'border-2 border-green-600' : 'border-black/10'
+                        }`}
+                        onPress={() => onChange(item.id)}>
+                        <AircraftCard
+                          registration={item.registration}
+                          type={item.type}
+                          image_url={item.image_url}
+                        />
+                      </TouchableOpacity>
+                    )}
+                    showsHorizontalScrollIndicator={false}
+                  />
                 )}
-              </View>
+              />
+              {errors.aircraft_id && (
+                <Text className="text-red-500">{errors.aircraft_id.message}</Text>
+              )}
             </View>
+
             <View className="mt-2 h-px w-full bg-black/10" />
             <View className="p-2">
               <Text>Departure</Text>
@@ -338,7 +365,6 @@ export default function CreateFlight() {
               </View>
             </View>
           </View>
-
           {/* <View className="mt-2 flex-row items-center gap-4">
             <TouchableOpacity className="rounded-xl border border-[#23d013] px-4 py-2">
               <Text className="text-base font-medium">SIC</Text>

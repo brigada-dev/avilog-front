@@ -12,8 +12,6 @@ export const fetchAirports: QueryFunction<any, [string, string, string, string |
     token
   );
 
-  console.log("Fixed API Response:", response);
-
   return {
     airports: response.data || [],
     current_page: response.meta?.current_page || 1,
