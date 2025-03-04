@@ -11,7 +11,10 @@ const filterOptions = ['1 yr', '3 yr', 'Start'];
 
 export default function LogbookScreen() {
   const [selectedFilter, setSelectedFilter] = useState(0);
-
+  // const { data: flights, isLoading: isFlightsLoading } = useQuery({
+  //   queryKey: ['flights'],
+  //   queryFn: () => fetchFlights(token!),
+  // });
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
