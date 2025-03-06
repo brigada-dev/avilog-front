@@ -4,17 +4,24 @@ import { Header } from '~/components/Header';
 import { FlightEntries } from '~/components/FlightEntries';
 import { PrimaryCards } from '~/components/PrimaryCards';
 import Layout from '~/components/Layout';
-import { View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
+import { fetchFlights } from '~/api/flights';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '~/context/auth-context';
 
 const filterOptions = ['1 yr', '3 yr', 'Start'];
 
 export default function LogbookScreen() {
   const [selectedFilter, setSelectedFilter] = useState(0);
-  // const { data: flights, isLoading: isFlightsLoading } = useQuery({
-  //   queryKey: ['flights'],
-  //   queryFn: () => fetchFlights(token!),
-  // });
+  const { token } = useAuth();
+
+  const { data: flights, isLoading, error } = useQuery({
+    queryKey: ['flights'],
+    queryFn: () => fetchFlights(token!),
+  });
+  console.log('Flights', flights)
+  console.log('error', error)
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -31,7 +38,13 @@ export default function LogbookScreen() {
         />
         <PrimaryCards />
         <View className="mt-6 rounded-xl bg-white p-4 shadow-md">
-          <FlightEntries />
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#2B9C1A" />
+          ) : error ? (
+            <Text className="text-red-500">Failed to load flights</Text>
+          ) : (
+            <FlightEntries flights={flights ?? []} /> // ✅ Pass fetched flights
+          )}
         </View>
       </Layout>
     </>

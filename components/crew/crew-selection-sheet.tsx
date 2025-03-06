@@ -1,15 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
+  BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '~/context/auth-context';
 import { Button } from '../Button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createCrewRole, CrewRole, deleteCrewRole } from '~/api/crews';
+import { createCrewRole, CrewRole, deleteCrewRole, editCrewRole } from '~/api/crews';
 
 type CrewSelectionProps = {
   crewRoles: CrewRole[];
@@ -23,6 +24,8 @@ export function CrewSelectionSheet({ crewRoles }: CrewSelectionProps) {
   const queryClient = useQueryClient();
 
   const [newCrewType, setNewCrewType] = useState('');
+  const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
+  const [editText, setEditText] = useState<string>('');
 
   const handleOpenSheet = () => bottomSheetRef.current?.present();
 
@@ -31,6 +34,15 @@ export function CrewSelectionSheet({ crewRoles }: CrewSelectionProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crews'] });
       setNewCrewType('');
+    },
+  });
+
+  const editCrewMutation = useMutation({
+    mutationFn: ({ roleId, updatedRole }: { roleId: number; updatedRole: string }) =>
+      editCrewRole(roleId, updatedRole, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crews'] });
+      setEditingRoleId(null); // Exit edit mode
     },
   });
 
@@ -45,17 +57,23 @@ export function CrewSelectionSheet({ crewRoles }: CrewSelectionProps) {
     }
   };
 
-  const handleDeleteCrewType = (roleId: number, role: string) => {
-    Alert.alert('Delete Crew Role', `Are you sure you want to delete "${role}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => deleteCrewMutation.mutate(roleId),
-      },
-    ]);
+  const handleSaveEdit = () => {
+    if (editingRoleId && editText.trim()) {
+      editCrewMutation.mutate({ roleId: editingRoleId, updatedRole: editText.trim() });
+    }
   };
 
+  // Handle Edit Press
+  const handleEditPress = (roleId: number, role: string) => {
+    setEditingRoleId(roleId); // Set row to edit mode
+    setEditText(role); // Pre-fill input
+  };
+
+  // Handle Cancel Edit
+  const handleCancelEdit = () => {
+    setEditingRoleId(null); // Exit edit mode
+    setEditText('');
+  };
   const renderBackdrop = React.useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -92,53 +110,117 @@ export function CrewSelectionSheet({ crewRoles }: CrewSelectionProps) {
         index={0}
         enablePanDownToClose
         backdropComponent={renderBackdrop}>
-        <View style={{ padding: 16 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20 }}>Existing Roles</Text>
+        <View style={{ padding: 16, flex: 1 }}>
+          <Text>Types</Text>
           <FlatList
             data={crewRoles || []}
             keyExtractor={(item) => item.id.toString()}
+            scrollEnabled={false}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                onLongPress={() => handleDeleteCrewType(item.id, item.role)}
+              <View
                 style={{
-                  padding: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: 16,
                   borderRadius: 8,
                   borderWidth: 1,
                   borderColor: '#ccc',
                   marginTop: 10,
                   backgroundColor: 'white',
                 }}>
-                <Text style={{ fontSize: 16 }}>{item.role.toUpperCase()}</Text>
-              </TouchableOpacity>
+                {/* Role Text or Input Field */}
+                {editingRoleId === item.id ? (
+                  <BottomSheetTextInput
+                    value={editText}
+                    onChangeText={setEditText}
+                    autoFocus
+                    style={{
+                      fontSize: 20,
+                      borderBottomWidth: 1,
+                      borderColor: '#23D013',
+                      padding: 4,
+                      flex: 1,
+                    }}
+                  />
+                ) : (
+                  <Text style={{ fontSize: 20 }}>{item.role}</Text>
+                )}
+
+                {/* Icons for Edit/Delete */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  {editingRoleId === item.id ? (
+                    <>
+                      {/* Save (Checkmark) */}
+                      <TouchableOpacity onPress={handleSaveEdit}>
+                        <Ionicons name="checkmark" size={36} color="#23D013" />
+                      </TouchableOpacity>
+
+                      {/* Cancel (X) */}
+                      <TouchableOpacity onPress={handleCancelEdit}>
+                        <Ionicons name="close" size={36} color="darkred" />
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      {/* Edit (Pencil) */}
+                      <TouchableOpacity onPress={() => handleEditPress(item.id, item.role)}>
+                        <Ionicons name="create-outline" size={36} color="#23D013" />
+                      </TouchableOpacity>
+
+                      {/* Delete (Trash) */}
+                      <TouchableOpacity
+                        onPress={() =>
+                          Alert.alert(
+                            'Delete Crew Role',
+                            `Are you sure you want to delete "${item.role}"?`,
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Delete',
+                                style: 'destructive',
+                                onPress: () => deleteCrewMutation.mutate(item.id),
+                              },
+                            ]
+                          )
+                        }>
+                        <Ionicons name="trash-outline" size={36} color="darkred" />
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </View>
             )}
           />
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
-            Add New Crew Role
-          </Text>
-          <TextInput
-            style={{
-              height: 50,
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 8,
-              paddingHorizontal: 10,
-              fontSize: 16,
-            }}
-            placeholder="Enter role (e.g., Pilot, Co-Pilot)"
-            value={newCrewType}
-            onChangeText={setNewCrewType}
-          />
-          <TouchableOpacity
-            onPress={handleCreateCrewType}
-            style={{
-              marginTop: 10,
-              backgroundColor: '#23D013',
-              padding: 12,
-              borderRadius: 8,
-              alignItems: 'center',
-            }}>
-            <Text style={{ color: 'white', fontSize: 16 }}>Add Role</Text>
-          </TouchableOpacity>
+          <Text style={{ fontSize: 16 }}>Add Crew Type</Text>
+          <View className="mb-4 flex-row gap-2">
+            <BottomSheetTextInput
+              style={{
+                height: 50,
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 8,
+                paddingHorizontal: 10,
+                fontSize: 16,
+                marginTop: 'auto',
+                flex: 1,
+              }}
+              placeholder="Enter role (e.g., Pilot, Co-Pilot)"
+              value={newCrewType}
+              onChangeText={setNewCrewType}
+            />
+            <TouchableOpacity
+              onPress={handleCreateCrewType}
+              style={{
+                marginTop: 10,
+                backgroundColor: '#23D013',
+                padding: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}>
+              <Feather name="plus" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
       </BottomSheetModal>
     </>

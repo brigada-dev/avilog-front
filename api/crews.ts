@@ -23,15 +23,9 @@ export const deleteCrewRole = async (roleId: number, token?: string) => {
   });
 };
 
-export const addCrewMember = async (roleId: number, name: string, token?: string) => {
-  return await api(`/crews/${roleId}/members`, token, {
-    method: 'POST',
-    body: JSON.stringify({ name }),
-  });
-};
-
-export const removeCrewMember = async (memberId: number, token?: string) => {
-  return await api(`/crews/members/${memberId}`, token, {
-    method: 'DELETE',
+export const editCrewRole = async (roleId: number, updatedRole: string, token?: string) => {
+  return await api(`/crews/${roleId}`, token, {
+    method: 'PUT',
+    body: JSON.stringify({ role: updatedRole }),
   });
 };

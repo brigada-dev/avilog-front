@@ -21,12 +21,14 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { FieldError } from 'react-hook-form';
 
 type AirportDropdownProps = {
   value: number | null;
   onChange: (value: number) => void;
   setArrivalAirport?: (country: string) => void;
   setDepartureAirport?: (country: string) => void;
+  errors: FieldError | null;
 };
 
 export function AirportSelectionSheet({
@@ -34,6 +36,7 @@ export function AirportSelectionSheet({
   onChange,
   setArrivalAirport,
   setDepartureAirport,
+  errors,
 }: AirportDropdownProps) {
   const { standard_style } = useUserSettings();
   const { token } = useAuth();
@@ -95,10 +98,10 @@ export function AirportSelectionSheet({
           paddingHorizontal: 12,
           paddingVertical: 6,
           borderRadius: 8,
-          backgroundColor: '#eeeeef',
+          backgroundColor: errors ? '#fee2e2' : '#eeeeef',
         }}
         onPress={handleOpenSheet}>
-        <Text className="text-base">
+        <Text className="text-base" style={{ color: errors ? '#dc2626' : '' }}>
           {value
             ? allAirports.find((a) => a.value === value)?.label || 'Select an Airport'
             : 'Select an Airport'}
@@ -116,7 +119,7 @@ export function AirportSelectionSheet({
         keyboardBlurBehavior="restore"
         onDismiss={() => setSearchTerm('')}>
         <TextInput
-          className="mx-3 h-12 rounded-lg border border-black/20 px-2 text-base placeholder:text-black/20"
+          className="mx-3 h-12 rounded-lg border border-black/20 px-2 text-base placeholder:text-black/20 bg-red"
           placeholder="Search Airport..."
           value={searchTerm}
           onChangeText={setSearchTerm}

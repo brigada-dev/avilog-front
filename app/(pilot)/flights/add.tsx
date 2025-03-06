@@ -10,13 +10,14 @@ import {
   Dimensions,
   FlatList,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { differenceInMinutes } from 'date-fns';
+import { differenceInMinutes, format, formatISO, parse, parseISO } from 'date-fns';
 import { Button } from '~/components/Button';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,16 +28,16 @@ import { fetchAircrafts } from '~/api/aircrafts';
 import { AirportSelectionSheet } from '~/components/airport/airport-selection-sheet';
 import { AircraftCard } from '~/components/aircraft/AircraftCard';
 import { CrewRole, fetchCrewRoles } from '~/api/crews';
-import { CrewEditSheet } from '~/components/crew/crew-edit-sheet';
 import { CrewForm } from '~/components/crew/crew-form';
 import { CrewSelectionSheet } from '~/components/crew/crew-selection-sheet';
+import { FlightSummary, SummaryModal } from '~/components/summary-modal';
 
 export default function CreateFlight() {
   const queryClient = useQueryClient();
   const { token } = useAuth();
   const [departureAirport, setDepartureAirport] = useState<string | null>();
   const [arrivalAirport, setArrivalAirport] = useState<string | null>();
-  const [editingMember, setEditingMember] = useState<{ id: number; name: string } | null>(null);
+  const [summaryModalVisible, setSummaryModalVisible] = useState(false);
 
   const { data: aircrafts, isLoading: isAircraftLoading } = useQuery({
     queryKey: ['aircrafts'],
@@ -51,14 +52,6 @@ export default function CreateFlight() {
     queryFn: () => fetchCrewRoles(token!),
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: FlightFormData) => createFlight(data, token!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flights'] });
-    },
-    onError: (error) => console.log(error),
-  });
-
   const form = useForm<FlightFormData>({
     resolver: zodResolver(flightSchema),
     defaultValues: {
@@ -68,10 +61,11 @@ export default function CreateFlight() {
       departure_date_time: new Date().toISOString(),
       arrival_date_time: new Date().toISOString(),
       departure: { day: 0, night: 0 },
-      type_of_flight: null,
+      type_of_flight: '',
       approach_type: '',
       landing: { day: 0, night: 0 },
       crew: [],
+      summary: {},
       signature: '',
     },
   });
@@ -81,8 +75,10 @@ export default function CreateFlight() {
   const depTime = form.watch('departure_date_time');
   const arrTime = form.watch('arrival_date_time');
   const crewState = form.watch('crew') || [];
-  const dayValue = form.watch('departure.day');
-  const nightValue = form.watch('departure.night');
+  const departureDayValue = form.watch('departure.day');
+  const departureNightValue = form.watch('departure.night');
+  const landingDayValue = form.watch('landing.day');
+  const landingNightValue = form.watch('landing.night');
 
   const minutesToHours = (minutes: number) => {
     if (minutes < 0) return '0:00';
@@ -91,8 +87,44 @@ export default function CreateFlight() {
     return `${hrs}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handleSaveFlight = async (data: FlightFormData) => {
-    console.log(data);
+  const handleSaveAdjustments = (updatedSummary: FlightSummary) => {
+    const filteredSummary = Object.fromEntries(
+      Object.entries(updatedSummary).filter(([_, value]) => value !== 0.0)
+    );
+
+    form.setValue('summary', filteredSummary);
+    setSummaryModalVisible(false);
+  };
+
+  const mutation = useMutation({
+    mutationFn: (data: FlightFormData) => createFlight(data, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flights'] });
+      router.replace('/(pilot)/flights')
+      alert('Flight created successfully!');
+    },
+    onError: (error) => {
+      console.error('Flight creation failed:', error);
+      // alert('Error creating flight. Please try again.');
+    },
+  });
+
+  const handleSaveFlight = (data: FlightFormData) => {
+    const formData = {
+      ...data,
+      departure: JSON.stringify(
+        data.departure && Object.keys(data.departure).length ? data.departure : { day: 0, night: 0 }
+      ),
+      landing: JSON.stringify(
+        data.landing && Object.keys(data.landing).length ? data.landing : { day: 0, night: 0 }
+      ),
+      crew: JSON.stringify(data.crew),
+      summary: JSON.stringify(data.summary),
+      departure_country_iso: departureAirport,
+      arrival_country_iso: arrivalAirport
+    };
+
+    mutation.mutate(formData as unknown as FlightFormData);
   };
 
   return (
@@ -100,7 +132,6 @@ export default function CreateFlight() {
       <Stack.Screen options={{ headerShown: false }} />
       <Layout variant="tertiary">
         <Header title="Create Flight" />
-
         <ScrollView>
           <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
             <View className="flex-row justify-between">
@@ -166,6 +197,7 @@ export default function CreateFlight() {
                         value={value}
                         onChange={onChange}
                         setDepartureAirport={setDepartureAirport}
+                        errors={form.formState.errors.departure_airport_id || null}
                       />
                     )
                   }
@@ -200,16 +232,11 @@ export default function CreateFlight() {
                       value={value}
                       onChange={onChange}
                       setArrivalAirport={setArrivalAirport}
+                      errors={form.formState.errors.arrival_airport_id || null}
                     />
                   )}
                 />
               </View>
-
-              {form.formState.errors.departure_airport_id && (
-                <Text className="text-red-500">
-                  {form.formState.errors.departure_airport_id.message}
-                </Text>
-              )}
             </View>
             <View className="mt-2 h-px w-full bg-black/10" />
 
@@ -266,7 +293,12 @@ export default function CreateFlight() {
 
           <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
             <View className="mb-4 rounded-xl">
-              <Text className="mb-2 text-base font-normal">Aircraft</Text>
+              <Text className="text-base font-normal">Aircraft</Text>
+              {form.formState.errors.aircraft_id && (
+                <Text className="mb-2 text-red-500">
+                  {form.formState.errors.aircraft_id.message}
+                </Text>
+              )}
               <Controller
                 control={form.control}
                 name="aircraft_id"
@@ -292,9 +324,6 @@ export default function CreateFlight() {
                   />
                 )}
               />
-              {form.formState.errors.aircraft_id && (
-                <Text className="text-red-500">{form.formState.errors.aircraft_id.message}</Text>
-              )}
             </View>
 
             <View className="mt-2 h-px w-full bg-black/10" />
@@ -308,7 +337,9 @@ export default function CreateFlight() {
                     className="flex-row items-center justify-between gap-2"
                     style={{ width: width * 0.5 - 80 }}>
                     <TouchableOpacity
-                      onPress={() => form.setValue('departure.day', Math.max(0, dayValue - 1))}>
+                      onPress={() =>
+                        form.setValue('departure.day', Math.max(0, departureDayValue - 1))
+                      }>
                       <Feather name="minus-circle" size={42} color="#23d013" />
                     </TouchableOpacity>
                     <Controller
@@ -318,7 +349,8 @@ export default function CreateFlight() {
                         <Text className="shrink-0 text-xl font-bold">{field.value}</Text>
                       )}
                     />
-                    <TouchableOpacity onPress={() => form.setValue('departure.day', dayValue + 1)}>
+                    <TouchableOpacity
+                      onPress={() => form.setValue('departure.day', departureDayValue + 1)}>
                       <Feather name="plus-circle" size={42} color="#23d013" />
                     </TouchableOpacity>
                   </View>
@@ -332,7 +364,9 @@ export default function CreateFlight() {
                     className="flex-row items-center justify-between gap-2"
                     style={{ width: width * 0.5 - 80 }}>
                     <TouchableOpacity
-                      onPress={() => form.setValue('departure.night', Math.max(0, nightValue - 1))}>
+                      onPress={() =>
+                        form.setValue('departure.night', Math.max(0, departureNightValue - 1))
+                      }>
                       <Feather name="minus-circle" size={42} color="#23d013" />
                     </TouchableOpacity>
                     <Controller
@@ -343,13 +377,38 @@ export default function CreateFlight() {
                       )}
                     />
                     <TouchableOpacity
-                      onPress={() => form.setValue('departure.night', nightValue + 1)}>
+                      onPress={() => form.setValue('departure.night', departureNightValue + 1)}>
                       <Feather name="plus-circle" size={42} color="#23d013" />
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
               <View className="mt-2 rounded-xl border border-black/10">
+                <View className="mt-2">
+                  <View className="border-b border-black/10 p-2">
+                    <Text>Type of flight</Text>
+
+                    <Ionicons
+                      name="list"
+                      size={32}
+                      color="#23D013"
+                      className="absolute right-3 top-3"
+                    />
+                    <View className="justify-center">
+                      <Controller
+                        control={form.control}
+                        name="type_of_flight"
+                        render={({ field: { onChange, value } }) => (
+                          <TextInput
+                            onChangeText={onChange}
+                            value={value ?? ''}
+                            className="text-center text-xl"
+                          />
+                        )}
+                      />
+                    </View>
+                  </View>
+                </View>
                 <View className="mt-2">
                   <View className="border-b border-black/10 p-2">
                     <Text>Landing</Text>
@@ -360,26 +419,71 @@ export default function CreateFlight() {
                       className="absolute right-3 top-3"
                     />
                     <View className="justify-center">
-                      <TextInput className="text-center text-xl" />
+                      <Controller
+                        control={form.control}
+                        name="approach_type"
+                        render={({ field: { onChange, value } }) => (
+                          <TextInput
+                            onChangeText={onChange}
+                            value={value ?? ''}
+                            className="text-center text-xl"
+                          />
+                        )}
+                      />
                     </View>
                   </View>
                 </View>
                 <View className="mt-2 flex-row items-center justify-around pb-2">
-                  <View className="flex-col items-center" style={{ width: width * 0.5 - 80 }}>
+                  {/* Day Counter */}
+                  <View className="flex-col items-center">
                     <Text className="text-lg font-bold">Day</Text>
-                    <View className="flex-row items-center justify-between gap-2">
-                      <Feather name="plus-circle" size={42} color="#23d013" />
-                      <Text className="text-xl font-bold">1</Text>
-                      <Feather name="minus-circle" size={42} color="#23d013" />
+                    <View
+                      className="flex-row items-center justify-between gap-2"
+                      style={{ width: width * 0.5 - 80 }}>
+                      <TouchableOpacity
+                        onPress={() =>
+                          form.setValue('landing.day', Math.max(0, landingDayValue - 1))
+                        }>
+                        <Feather name="minus-circle" size={42} color="#23d013" />
+                      </TouchableOpacity>
+                      <Controller
+                        control={form.control}
+                        name="landing.day"
+                        render={({ field }) => (
+                          <Text className="shrink-0 text-xl font-bold">{field.value}</Text>
+                        )}
+                      />
+                      <TouchableOpacity
+                        onPress={() => form.setValue('landing.day', landingDayValue + 1)}>
+                        <Feather name="plus-circle" size={42} color="#23d013" />
+                      </TouchableOpacity>
                     </View>
                   </View>
+
                   <View className="mt-2 h-full w-px bg-black/10" />
-                  <View className="flex-col items-center" style={{ width: width * 0.5 - 80 }}>
+
+                  <View className="flex-col items-center">
                     <Text className="text-lg font-bold">Night</Text>
-                    <View className="flex-row items-center justify-between gap-2">
-                      <Feather name="plus-circle" size={42} color="#23d013" />
-                      <Text className="text-xl font-bold">0</Text>
-                      <Feather name="minus-circle" size={42} color="#23d013" />
+                    <View
+                      className="flex-row items-center justify-between gap-2"
+                      style={{ width: width * 0.5 - 80 }}>
+                      <TouchableOpacity
+                        onPress={() =>
+                          form.setValue('landing.night', Math.max(0, landingNightValue - 1))
+                        }>
+                        <Feather name="minus-circle" size={42} color="#23d013" />
+                      </TouchableOpacity>
+                      <Controller
+                        control={form.control}
+                        name="landing.night"
+                        render={({ field }) => (
+                          <Text className="text-xl font-bold">{field.value}</Text>
+                        )}
+                      />
+                      <TouchableOpacity
+                        onPress={() => form.setValue('landing.night', landingNightValue + 1)}>
+                        <Feather name="plus-circle" size={42} color="#23d013" />
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -401,32 +505,37 @@ export default function CreateFlight() {
             />
           </View>
 
-          {/* <View className="mt-4 rounded-xl bg-white p-4">
+          <View className="mt-4 rounded-xl bg-white p-4">
             <Text className="text-lg font-semibold">Summary</Text>
-            <Controller
-              control={control}
-              name="summary.total"
-              render={({ field: { onChange, value } }) => (
-                <View className="aspect-square size-16 items-center justify-center rounded-full border-4 border-[#81E371]">
-                  <Text className="text-base font-bold">{value}</Text>
-                  <Text className="text-xs text-gray-500">TOTAL</Text>
-                </View>
-              )}
-            />
-            <Controller
-              control={control}
-              name="summary.ifr"
-              render={({ field: { onChange, value } }) => (
-                <View className="aspect-square size-16 items-center justify-center rounded-full border-4 border-[#81E371]">
-                  <Text className="text-base font-bold">{value}</Text>
-                  <Text className="text-xs text-gray-500">IFR</Text>
-                </View>
-              )}
-            /> <View className="mt-3 h-px w-full bg-black/10" />
+
+            <View className="flex-row justify-between">
+              <FlatList
+                data={Object.entries(form.watch('summary') || {}).filter(
+                  ([_, value]) => value !== 0.0
+                )}
+                horizontal
+                keyExtractor={([key]) => key}
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => {
+                  const [key, value] = item;
+                  return (
+                    <View
+                      key={key}
+                      className="mx-2 aspect-square size-16 items-center justify-center rounded-full border-4 border-[#81E371]">
+                      <Text className="text-base font-bold">{(value as number).toFixed(1)}</Text>
+                      <Text className="text-xs text-gray-500">{key.toUpperCase()}</Text>
+                    </View>
+                  );
+                }}
+              />
+            </View>
+
+            <View className="mt-3 h-px w-full bg-black/10" />
+
             <Button
               title="Adjust"
               iconLeft={require('../../../assets/images/edit.png')}
-              onPress={() => setAdjustModalVisible(true)}
+              onPress={() => setSummaryModalVisible(true)}
               style={{
                 borderRadius: 16,
                 borderColor: '#C4C4C4',
@@ -435,11 +544,13 @@ export default function CreateFlight() {
                 marginTop: 12,
               }}
             />
-          </View> */}
+          </View>
+
           <View className="mt-4 rounded-xl bg-white p-4">
             <View className="mt-2 flex-row flex-wrap gap-4">
               <TextInput className="flex-1 py-2 font-bold text-gray-800" />
             </View>
+
             <View className="mt-3 h-px w-full bg-black/10" />
             <Button
               title="Signature"
@@ -463,7 +574,12 @@ export default function CreateFlight() {
           </View>
         </ScrollView>
       </Layout>
-      <CrewEditSheet member={editingMember} onClose={() => setEditingMember(null)} />
+      <SummaryModal
+        visible={summaryModalVisible}
+        onClose={() => setSummaryModalVisible(false)}
+        flightSummary={form.getValues('summary') || {}}
+        onSave={handleSaveAdjustments}
+      />
     </>
   );
 }

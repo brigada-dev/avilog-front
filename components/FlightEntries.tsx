@@ -1,129 +1,91 @@
+import { format } from 'date-fns';
 import { Link } from 'expo-router';
 import { View, Text, Image, FlatList, TouchableOpacity } from 'react-native';
+import { Flight } from '~/api/flights';
+import { differenceInMinutes, parseISO } from 'date-fns';
+
+const calculateDuration = (departure: string, arrival: string): string => {
+  const depTime = parseISO(departure);
+  const arrTime = parseISO(arrival);
+
+  const diffMinutes = differenceInMinutes(arrTime, depTime);
+
+  if (diffMinutes < 0) return '00:00'; // Safety check for invalid times
+
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
 
 type FlightEntriesProps = {
-  id: number;
-  registration: string;
-  type: string;
-  date: string;
-  from: string;
-  to: string;
-  depTime: string;
-  arrTime: string;
-  duration: string;
-  depFlag: any;
-  arrFlag: any;
+  flights: Flight[];
 };
 
-const recentFlights: FlightEntriesProps[] = [
-  {
-    id: 1,
-    registration: 'OY-FSD',
-    type: 'IFR',
-    date: '27/09/24',
-    from: 'EVRA',
-    to: 'ESMS',
-    depTime: '12:10',
-    arrTime: '13:45',
-    duration: '1:35',
-    depFlag: require('../assets/images/latvia.png'),
-    arrFlag: require('../assets/images/sweden.png'),
-  },
-  {
-    id: 2,
-    registration: 'OY-FSD',
-    type: 'IFR',
-    date: '27/09/24',
-    from: 'EVRA',
-    to: 'ESMS',
-    depTime: '12:10',
-    arrTime: '13:45',
-    duration: '1:35',
-    depFlag: require('../assets/images/romania.png'),
-    arrFlag: require('../assets/images/latvia.png'),
-  },
-  {
-    id: 3,
-    registration: 'OY-FSD',
-    type: 'IFR',
-    date: '27/09/24',
-    from: 'EVRA',
-    to: 'ESMS',
-    depTime: '12:10',
-    arrTime: '13:45',
-    duration: '1:35',
-    depFlag: require('../assets/images/latvia.png'),
-    arrFlag: require('../assets/images/romania.png'),
-  },
-  {
-    id: 4,
-    registration: 'OY-FSD',
-    type: 'IFR',
-    date: '27/09/24',
-    from: 'EVRA',
-    to: 'ESMS',
-    depTime: '12:10',
-    arrTime: '13:45',
-    duration: '1:35',
-    depFlag: require('../assets/images/sweden.png'),
-    arrFlag: require('../assets/images/latvia.png'),
-  },
-];
-const renderFlightCard = ({ item }: { item: FlightEntriesProps }) => {
-  return (
-    <Link href={`/(pilot)/flights/${item.id}`} asChild>
-      <TouchableOpacity>
-        <View className="flex-1 flex-row items-center justify-between">
-          <View className="w-full flex-1 flex-col items-center p-2">
-            <View className="flex flex-row items-center justify-between gap-3">
-              <Image
-                source={require('../assets/plane-icon.png')}
-                style={{ width: 24, height: 24, marginRight: 8 }}
-              />
-              <Text className="text-base font-medium">{item.registration}</Text>
+export function FlightEntries({ flights }: FlightEntriesProps) {
+  const renderFlightCard = ({ item }: { item: Flight }) => {
+    return (
+      <Link href={`/(pilot)/flights/${item.id}`} asChild>
+        <TouchableOpacity>
+          <View className="flex-1 flex-row items-center justify-between">
+            <View className="w-full flex-1 flex-col items-center p-2">
+              <View className="flex flex-row items-center justify-between gap-3">
+                <Image
+                  source={require('../assets/plane-icon.png')}
+                  style={{ width: 24, height: 24, marginRight: 8 }}
+                />
+                <Text className="text-base font-medium">{item.aircraft_registration}</Text>
+              </View>
+              <View className="flex flex-row items-center justify-between gap-2">
+                <Image
+                  source={{ uri: `https://flagcdn.com/w40/${item.departure_country_iso}.png` }}
+                  className="mr-2 h-7 w-10"
+                />
+                <View className="flex items-center justify-center rounded-md border border-black px-2">
+                  <Text className="text-xs font-normal">
+                    {format(item.departure_date_time, 'HH:mm')}
+                  </Text>
+                  <Text className="text-sm font-bold text-black">{item.departure_airport_icao ?? 'N/A'}</Text>
+                </View>
+              </View>
             </View>
-            <View className="flex flex-row items-center justify-between gap-2">
-              <Image source={item.depFlag} className="mr-2 h-7 w-10" />
-              <View className="flex items-center justify-center rounded-md border border-black px-2">
-                <Text className="text-xs font-normal">{item.depTime}</Text>
-                <Text className="text-sm font-bold text-black">{item.from}</Text>
+
+            <View className="flex-col items-center">
+              <Text className="mx-2 text-xl font-medium">{item.type_of_flight}</Text>
+              <Text className="mx-2 text-3xl font-bold">{calculateDuration(item.departure_date_time, item.arrival_date_time)}</Text>
+            </View>
+
+            <View className="w-full flex-1 flex-col items-center p-2">
+              <View className="flex flex-row items-center justify-between gap-3">
+                <Text className="text-base font-medium">
+                  {format(item.arrival_date_time, 'dd/MM/yy')}
+                </Text>
+                <Image
+                  source={require('../assets/images/calendar.png')}
+                  style={{ width: 24, height: 24, marginRight: 8 }}
+                />
+              </View>
+              <View className="flex flex-row items-center justify-between gap-2">
+                <View className="flex items-center justify-center rounded-md border border-black px-2">
+                  <Text className="text-xs font-normal">
+                    {format(item.arrival_date_time, 'HH:mm')}
+                  </Text>
+                  <Text className="text-sm font-bold text-black">{item.arrival_airport_icao ?? 'N/A'}</Text>
+                </View>
+                <Image source={{ uri: `https://flagcdn.com/w40/${item.arrival_country_iso}.png` }} className="h-7 w-10" />
               </View>
             </View>
           </View>
+        </TouchableOpacity>
+      </Link>
+    );
+  };
 
-          <View className="flex-col items-center">
-            <Text className="mx-2 text-xl font-medium">{item.type}</Text>
-            <Text className="mx-2 text-3xl font-bold">{item.duration}</Text>
-          </View>
-
-          <View className="w-full flex-1 flex-col items-center p-2">
-            <View className="flex flex-row items-center justify-between gap-3">
-              <Text className="text-base font-medium">{item.date}</Text>
-              <Image
-                source={require('../assets/images/calendar.png')}
-                style={{ width: 24, height: 24, marginRight: 8 }}
-              />
-            </View>
-            <View className="flex flex-row items-center justify-between gap-2">
-              <View className="flex items-center justify-center rounded-md border border-black px-2">
-                <Text className="text-xs font-normal">{item.depTime}</Text>
-                <Text className="text-sm font-bold text-black">{item.from}</Text>
-              </View>
-              <Image source={item.arrFlag} className="h-7 w-10" />
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Link>
-  );
-};
-
-export function FlightEntries() {
   return (
     <FlatList
       scrollEnabled={false}
       renderItem={renderFlightCard}
-      data={recentFlights}
+      data={flights}
       keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={{ flex: 1 }}
       ItemSeparatorComponent={() => (

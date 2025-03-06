@@ -23,7 +23,7 @@ import {
   isBefore,
 } from 'date-fns';
 import { Button } from '~/components/Button';
-import AdjustModal from '~/components/AdjustModal';
+import { SummaryModal } from '~/components/summary-modal';
 
 interface FlightSummary {
   total: string;
@@ -213,7 +213,7 @@ export default function EditFlight() {
   const [landings, setLandings] = useState(flight.landings);
   const [pic, setPic] = useState(flight.crew.pic);
   const [sic, setSic] = useState(flight.crew.sic);
-  const [isAdjustModalVisible, setAdjustModalVisible] = useState(false);
+  const [isSummaryModalVisible, setSummaryModalVisible] = useState(false);
 
   const handleDateChange = (event: any, selectedDate: Date | undefined, type: 'from' | 'to') => {
     if (!selectedDate) return;
@@ -524,9 +524,9 @@ export default function EditFlight() {
           </View>
         </ScrollView>
       </Layout>
-      <AdjustModal
-        visible={isAdjustModalVisible}
-        onClose={() => setAdjustModalVisible(false)}
+      <SummaryModal
+        visible={isSummaryModalVisible}
+        onClose={() => setSummaryModalVisible(false)}
         flightSummary={flight.summary}
         onSave={handleSaveAdjustments}
       />

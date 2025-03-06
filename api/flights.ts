@@ -18,6 +18,11 @@ export type Flight = {
   type_of_flight: string | null;
   approach_type: string | null;
   crew: CrewMember[];
+  aircraft_registration: string;
+  departure_airport_icao: string;
+  arrival_airport_icao: string;
+  arrival_country_iso: string;
+  departure_country_iso: string;
 };
 
 export const flightSchema = z.object({
@@ -42,7 +47,25 @@ export const flightSchema = z.object({
       type: z.string(),
     })
   ),
+  summary: z.object({
+    total: z.number().optional(),
+    pic: z.number().optional(),
+    sic: z.number().optional(),
+    picus: z.number().optional(),
+    dual: z.number().optional(),
+    inst: z.number().optional(),
+    multi: z.number().optional(),
+    night: z.number().optional(),
+    ifr: z.number().optional(),
+    ifri: z.number().optional(),
+    ifrs: z.number().optional(),
+    xc: z.number().optional(),
+    rp: z.number().optional(),
+    sim: z.number().optional(),
+  }),
   signature: z.string().optional(),
+  departure_country_iso: z.string().optional(),
+  arrival_country_iso: z.string().optional(),
 });
 
 export type FlightFormData = z.infer<typeof flightSchema>;
@@ -61,17 +84,22 @@ export const createFlight = async (data: FlightFormData, token?: string) => {
       arrival_airport_id: data.arrival_airport_id,
       departure_date_time: new Date(data.departure_date_time).toISOString(),
       arrival_date_time: new Date(data.arrival_date_time).toISOString(),
-      departure: {
+      departure: JSON.stringify({
         day: data.departure.day,
         night: data.departure.night,
-      },
+      }),
       type_of_flight: data.type_of_flight,
       approach_type: data.approach_type,
-      landing: {
+      landing: JSON.stringify({
         day: data.landing.day,
         night: data.landing.night,
-      },
-      crew: data.crew,
+      }),
+      crew: JSON.stringify(data.crew),
+      summary:
+        Object.keys(data.summary).length > 0 ? JSON.stringify(data.summary) : JSON.stringify({}),
+      signature: data.signature,
+      departure_country_iso: data.departure_country_iso,
+      arrival_country_iso: data.arrival_country_iso,
     }),
   });
 };
