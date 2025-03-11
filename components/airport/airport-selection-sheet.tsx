@@ -11,8 +11,7 @@ import {
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserSettings } from '~/context/user-context';
 import { useAuth } from '~/context/auth-context';
-import { fetchAirports } from '~/api/airports';
-import { Airport } from '~/types/map';
+import { fetchAirports, Airport } from '~/api/airports';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -50,8 +49,8 @@ export function AirportSelectionSheet({
     status,
     error,
   } = useInfiniteQuery({
-    queryKey: ['airports', searchTerm, standard_style, token!],
-    queryFn: fetchAirports,
+    queryKey: ['airports', searchTerm, standard_style, token],
+    queryFn: ({ pageParam = 1 }) => fetchAirports(pageParam, searchTerm, standard_style, token || undefined),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage && lastPage.current_page < lastPage.last_page
@@ -61,7 +60,7 @@ export function AirportSelectionSheet({
 
   const allAirports =
     fetchedAirports?.pages?.flatMap((page) =>
-      (page.airports || []).map((airport: Airport) => ({
+      (page.data || []).map((airport: Airport) => ({
         label: `${(standard_style === 'ICAO' ? `${airport.name} ${airport.icao ? `(${airport.icao})` : ''}` : airport.iata) || 'N/A'}`,
         value: airport.id ?? 'N/A',
         country: airport.country.toLowerCase() ?? 'default',

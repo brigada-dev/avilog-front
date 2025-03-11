@@ -15,3 +15,5 @@ expo-env.d.ts
 .expo
 .expo-shared
 # @end expo-cli
+app/.DS_Store
+.DS_Store

@@ -1,13 +1,25 @@
 import { GradientBackground } from '~/components/ui/GradientBackground';
 import { Container } from '~/components/Container';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
-export default function Layout({ children, variant }: { children: React.ReactNode; variant: 'primary' | 'secondary' | 'tertiary'; }) {
+export default function Layout({ 
+  children, 
+  variant, 
+  disableScroll = false 
+}: { 
+  children: React.ReactNode; 
+  variant: 'primary' | 'secondary' | 'tertiary'; 
+  disableScroll?: boolean;
+}) {
   return (
     <GradientBackground variant={variant}>
-      <ScrollView>
+      {disableScroll ? (
         <Container>{children}</Container>
-      </ScrollView>
+      ) : (
+        <ScrollView>
+          <Container>{children}</Container>
+        </ScrollView>
+      )}
     </GradientBackground>
   );
 }

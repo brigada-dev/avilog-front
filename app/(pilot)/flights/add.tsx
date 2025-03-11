@@ -8,9 +8,9 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
-  FlatList,
   ActivityIndicator,
   KeyboardAvoidingView,
+  FlatList,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
@@ -24,13 +24,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFlight, FlightFormData, flightSchema } from '~/api/flights';
 import { useAuth } from '~/context/auth-context';
-import { fetchAircrafts } from '~/api/aircrafts';
 import { AirportSelectionSheet } from '~/components/airport/airport-selection-sheet';
-import { AircraftCard } from '~/components/aircraft/AircraftCard';
 import { CrewRole, fetchCrewRoles } from '~/api/crews';
 import { CrewForm } from '~/components/crew/crew-form';
 import { CrewSelectionSheet } from '~/components/crew/crew-selection-sheet';
 import { FlightSummary, SummaryModal } from '~/components/summary-modal';
+import { AircraftSelectionSheet } from '~/components/aircraft/AircraftSelectionSheet';
 
 export default function CreateFlight() {
   const queryClient = useQueryClient();
@@ -39,10 +38,6 @@ export default function CreateFlight() {
   const [arrivalAirport, setArrivalAirport] = useState<string | null>();
   const [summaryModalVisible, setSummaryModalVisible] = useState(false);
 
-  const { data: aircrafts, isLoading: isAircraftLoading } = useQuery({
-    queryKey: ['aircrafts'],
-    queryFn: () => fetchAircrafts(token!),
-  });
   const {
     data: crewRoles,
     isLoading: isCrewLoading,
@@ -105,7 +100,6 @@ export default function CreateFlight() {
     },
     onError: (error) => {
       console.error('Flight creation failed:', error);
-      // alert('Error creating flight. Please try again.');
     },
   });
 
@@ -190,7 +184,7 @@ export default function CreateFlight() {
                   control={form.control}
                   name="departure_airport_id"
                   render={({ field: { onChange, value } }) =>
-                    isAircraftLoading ? (
+                    isCrewLoading ? (
                       <ActivityIndicator style={{ backgroundColor: 'green' }} />
                     ) : (
                       <AirportSelectionSheet
@@ -294,33 +288,14 @@ export default function CreateFlight() {
           <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
             <View className="mb-4 rounded-xl">
               <Text className="text-base font-normal">Aircraft</Text>
-              {form.formState.errors.aircraft_id && (
-                <Text className="mb-2 text-red-500">
-                  {form.formState.errors.aircraft_id.message}
-                </Text>
-              )}
               <Controller
                 control={form.control}
                 name="aircraft_id"
                 render={({ field: { value, onChange } }) => (
-                  <FlatList
-                    horizontal
-                    data={aircrafts}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        className={`mx-1 rounded-xl border p-2 ${
-                          value === item.id ? 'border-2 border-green-600' : 'border-black/10'
-                        }`}
-                        onPress={() => onChange(item.id)}>
-                        <AircraftCard
-                          registration={item.registration}
-                          type={item.type}
-                          image_url={item.image_url}
-                        />
-                      </TouchableOpacity>
-                    )}
-                    showsHorizontalScrollIndicator={false}
+                  <AircraftSelectionSheet
+                    value={value}
+                    onChange={onChange}
+                    errors={form.formState.errors.aircraft_id || null}
                   />
                 )}
               />
