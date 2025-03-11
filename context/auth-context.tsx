@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { signInUser, signUpUser } from "../api/auth";
 import { SignUpFormData } from "~/app/(auth)/sign-up";
 import { SignInFormData } from "~/app/(auth)/sign-in";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 type AuthContextType = {
   user: any | null;
@@ -18,6 +18,29 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const getSecureItem = async (key: string) => {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem(key);
+  }
+  return SecureStore.getItemAsync(key);
+};
+
+const setSecureItem = async (key: string, value: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.setItem(key, value);
+    return;
+  }
+  return SecureStore.setItemAsync(key, value);
+};
+
+const deleteSecureItem = async (key: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.removeItem(key);
+    return;
+  }
+  return SecureStore.deleteItemAsync(key);
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<any | null>(null);
@@ -26,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const loadSession = async () => {
-      const storedSession = await SecureStore.getItemAsync("avilog_auth_session");
+      const storedSession = await getSecureItem("avilog_auth_session");
 
       if (storedSession) {
         try {
@@ -49,13 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    await SecureStore.setItemAsync("avilog_auth_session", JSON.stringify(session));
+    await setSecureItem("avilog_auth_session", JSON.stringify(session));
     setToken(session.token);
     setUser(session.user);
   };
 
   const clearSession = async () => {
-    await SecureStore.deleteItemAsync("avilog_auth_session");
+    await deleteSecureItem("avilog_auth_session");
     setToken(null);
     setUser(null);
     router.replace("/sign-in");
