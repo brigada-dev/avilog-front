@@ -1,8 +1,10 @@
 import { format } from 'date-fns';
 import { Link } from 'expo-router';
-import { View, Text, Image, FlatList, TouchableOpacity } from 'react-native';
-import { Flight } from '~/api/flights';
+import { View, Text, Image, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Flight, fetchFlights } from '~/api/flights';
 import { differenceInMinutes, parseISO } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '~/context/auth-context';
 
 const calculateDuration = (departure: string, arrival: string): string => {
   const depTime = parseISO(departure);
@@ -19,10 +21,41 @@ const calculateDuration = (departure: string, arrival: string): string => {
 };
 
 type FlightEntriesProps = {
-  flights: Flight[];
+  limit?: number;
 };
 
-export function FlightEntries({ flights }: FlightEntriesProps) {
+export function FlightEntries({ limit = 5 }: FlightEntriesProps) {
+  const { token } = useAuth();
+  
+  const { data: flights, isLoading, error } = useQuery({
+    queryKey: ['recent-flights', limit],
+    queryFn: () => fetchFlights(token!, limit),
+  });
+
+  if (isLoading) {
+    return (
+      <View className="flex items-center justify-center py-4">
+        <ActivityIndicator size="large" color="#2B9C1A" />
+      </View>
+    );
+  }
+
+  if (error || !flights) {
+    return (
+      <View className="flex items-center justify-center py-4">
+        <Text className="text-red-500">Failed to load recent flights</Text>
+      </View>
+    );
+  }
+
+  if (flights.length === 0) {
+    return (
+      <View className="flex items-center justify-center py-4">
+        <Text className="text-gray-500">No flights found</Text>
+      </View>
+    );
+  }
+
   const renderFlightCard = ({ item }: { item: Flight }) => {
     return (
       <Link href={`/(pilot)/flights/${item.id}`} asChild>
@@ -45,7 +78,7 @@ export function FlightEntries({ flights }: FlightEntriesProps) {
                   <Text className="text-xs font-normal">
                     {format(item.departure_date_time, 'HH:mm')}
                   </Text>
-                  <Text className="text-sm font-bold text-black">{item.departure_airport_icao ?? 'N/A'}</Text>
+                  <Text className="text-sm font-bold text-black">{item.departure_airport_code ?? 'N/A'}</Text>
                 </View>
               </View>
             </View>
@@ -70,7 +103,7 @@ export function FlightEntries({ flights }: FlightEntriesProps) {
                   <Text className="text-xs font-normal">
                     {format(item.arrival_date_time, 'HH:mm')}
                   </Text>
-                  <Text className="text-sm font-bold text-black">{item.arrival_airport_icao ?? 'N/A'}</Text>
+                  <Text className="text-sm font-bold text-black">{item.arrival_airport_code ?? 'N/A'}</Text>
                 </View>
                 <Image source={{ uri: `https://flagcdn.com/w40/${item.arrival_country_iso}.png` }} className="h-7 w-10" />
               </View>

@@ -13,7 +13,7 @@ export function GradientBackground({ style, children, variant }: GradientBackgro
     case 'primary':
       return (
         <LinearGradient
-          colors={['#A5FF96BF', '#84FFE1BF', '#36ECE1BF']}
+          colors={['rgba(165,255,150,0.75)', 'rgba(132,255,225,0.75)', 'rgba(54,236,225,0.75)']}
           start={{ x: 1, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={[styles.gradient, style]}>
@@ -23,7 +23,7 @@ export function GradientBackground({ style, children, variant }: GradientBackgro
     case 'secondary':
       return (
         <LinearGradient
-          colors={['#466142', '#3D6159', '#255C58']}
+          colors={['rgba(165,255,150,0.3)', 'rgba(132,255,225,0.3)', 'rgba(54,236,225,0.3)']}
           start={{ x: 1, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={[styles.gradient, style]}>

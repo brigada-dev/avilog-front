@@ -121,10 +121,10 @@ export default function TotalTimeChartScreen() {
   });
 
   return (
-    <Layout variant='primary'>
+    <Layout variant='secondary'>
       <Header title="TOTAL TIME" />
       <ScrollView>
-        <View className="flex-1 rounded-xl bg-white p-4 shadow-md">
+        <View className="flex-1 rounded-xl bg-white p-4 shadow-default">
           <SegmentedControl
             values={displayLabels}
             selectedIndex={selectedIndex}

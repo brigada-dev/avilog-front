@@ -65,7 +65,7 @@ export default function ProfileRoute() {
         <View className="mb-4">
           {/* Input Fields */}
           <View>
-            <View className="mb-4 mt-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 mt-4 rounded-xl bg-white p-4 shadow-default">
               <Text className="mb-2 italic text-gray-600">Name</Text>
               <Controller
                 control={control}
@@ -84,7 +84,7 @@ export default function ProfileRoute() {
               {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
             </View>
 
-            <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
               <Text className="mb-2 italic text-gray-600">Surname</Text>
               <Controller
                 control={control}
@@ -103,7 +103,7 @@ export default function ProfileRoute() {
               {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
             </View>
 
-            <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
               <Text className="mb-2 italic text-gray-600">Email</Text>
               <Controller
                 control={control}
@@ -123,7 +123,7 @@ export default function ProfileRoute() {
               {errors.name && <Text className="text-red-500">{errors.name.message}</Text>}
             </View>
 
-            {/* <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            {/* <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
                 <Text className="mb-2 italic text-gray-600">Language</Text>
                 <View className="flex-row items-center">
                   <Image
@@ -139,7 +139,7 @@ export default function ProfileRoute() {
                 </View>
               </View> */}
 
-            <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
               <Controller
                 control={control}
                 name="standard_style"
@@ -194,7 +194,7 @@ export default function ProfileRoute() {
               )}
             </View>
 
-            <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
               <View className="flex-row items-center justify-between">
                 <View>
                   <Text className="italic text-gray-600">Decimal format</Text>
@@ -217,11 +217,11 @@ export default function ProfileRoute() {
 
             {/* Logbook Import/Export */}
             <View className="mb-4 flex-row">
-              <TouchableOpacity className="mr-4 flex-1 items-center rounded-xl bg-white p-4 shadow-sm">
+              <TouchableOpacity className="mr-4 flex-1 items-center rounded-xl bg-white p-4 shadow-default">
                 <Text className="mt-2 text-center">Import logbook</Text>
                 <Image source={require('../../assets/images/logbook_in.png')} style={{ flex: 1 }} />
               </TouchableOpacity>
-              <TouchableOpacity className="flex-1 items-center rounded-xl bg-white p-4 shadow-sm">
+              <TouchableOpacity className="flex-1 items-center rounded-xl bg-white p-4 shadow-default">
                 <Text className="mt-2 text-center">Export logbook</Text>
                 <Image
                   source={require('../../assets/images/logbook_out.png')}
@@ -231,7 +231,7 @@ export default function ProfileRoute() {
             </View>
 
             {/* Signature */}
-            <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
               <Text className="mb-2 text-gray-600">Signature</Text>
               <TextInput placeholder="Write your signature here.." className="text-gray-800" />
             </View>
@@ -239,7 +239,7 @@ export default function ProfileRoute() {
             <LicenseForm />
 
             {/* Training */}
-            <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
               <Text className="mb-2 font-semibold text-gray-800">Training</Text>
               <Image
                 source={require('../../assets/images/paper-plane-flying.png')}
@@ -252,7 +252,7 @@ export default function ProfileRoute() {
               />
             </View>
 
-            <View className="mb-4 overflow-hidden rounded-xl bg-white shadow-sm">
+            <View className="mb-4 overflow-hidden rounded-xl bg-white shadow-default">
               <View className="bg-gray-900 p-4">
                 <Text className="text-center text-lg font-semibold text-white">SUBSCRIPTION</Text>
               </View>
@@ -266,7 +266,7 @@ export default function ProfileRoute() {
                 </Text>
               </View>
 
-              <View className="bg-white p-4 shadow-sm">
+              <View className="bg-white p-4 shadow-default">
                 <View className="flex-row">
                   <Image
                     source={require('../../assets/images/calendar.png')}
@@ -303,12 +303,12 @@ export default function ProfileRoute() {
             </View>
 
             {/* Support */}
-            <View className="mb-8 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-8 rounded-xl bg-white p-4 shadow-default">
               <Text className="mb-1 text-gray-600">Support</Text>
               <Text className="text-gray-800">support@avilog.io</Text>
             </View>
 
-            <View className="mb-8 rounded-xl bg-white p-4 shadow-sm">
+            <View className="mb-8 rounded-xl bg-white p-4 shadow-default">
               <Button
                 onPress={signOut}
                 title="Logout"

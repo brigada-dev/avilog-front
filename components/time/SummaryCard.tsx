@@ -13,7 +13,7 @@ type SummaryCardProps = {
 
 export function SummaryCard({ title, items }: SummaryCardProps) {
   return (
-    <View className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
+    <View className="mb-4 rounded-2xl bg-white p-4 shadow-default">
       <Text className="mb-2 text-lg font-bold">{title}</Text>
       {items.map((item, index) => (
         <View

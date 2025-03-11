@@ -52,7 +52,7 @@ export default function AircraftsRoute() {
 
   if (!token) {
     return (
-      <Layout variant="primary">
+      <Layout variant="secondary">
         <Header title="Aircraft" />
         <View className="flex-1 items-center justify-center">
           <Text className="text-red-500">Please log in to view aircraft</Text>
@@ -64,11 +64,11 @@ export default function AircraftsRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <Layout variant="primary" disableScroll>
+      <Layout variant="secondary" disableScroll>
         <Header title="Aircraft" />
         <View className="flex-1">
           <View className="px-4 py-2">
-            <View className="flex-row items-center rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <View className="flex-row items-center rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-default">
               <Ionicons name="search" size={20} color="#666" />
               <TextInput
                 ref={inputRef}

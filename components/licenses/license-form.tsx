@@ -70,7 +70,7 @@ export function LicenseForm() {
   };
 
   return (
-    <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+    <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
       <View className="mb-4 flex-row justify-between">
         <Text className="font-semibold">Licenses</Text>
         <Text className="font-semibold">Expires</Text>

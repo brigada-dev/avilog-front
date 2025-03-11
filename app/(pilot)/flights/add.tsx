@@ -127,7 +127,7 @@ export default function CreateFlight() {
       <Layout variant="tertiary">
         <Header title="Create Flight" />
         <ScrollView>
-          <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+          <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
             <View className="flex-row justify-between">
               <Text className="text-base font-normal">Departure</Text>
               <Text className="text-base font-normal">Arrival</Text>
@@ -285,7 +285,7 @@ export default function CreateFlight() {
             </View>
           </View>
 
-          <View className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+          <View className="mb-4 rounded-xl bg-white p-4 shadow-default">
             <View className="mb-4 rounded-xl">
               <Text className="text-base font-normal">Aircraft</Text>
               <Controller

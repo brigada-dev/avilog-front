@@ -45,6 +45,9 @@ module.exports = {
       borderWidth: {
         hairline: hairlineWidth(),
       },
+      boxShadow: {
+        'default': '0px 3px 3px 2px rgba(0, 0, 0, 0.25)'
+      }
     },
   },
   plugins: [],

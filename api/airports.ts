@@ -10,6 +10,7 @@ export const airportSchema = z.object({
   easa: z.string().nullable().optional(),
   caa: z.string().nullable().optional(),
   dgca: z.string().nullable().optional(),
+  code: z.string().nullable().optional(),
   country: z.string(),
   created_at: z.string(),
   updated_at: z.string(),

@@ -61,9 +61,9 @@ export default function CrewRoute() {
   }));
 
   return (
-    <Layout variant='primary'>
+    <Layout variant='secondary'>
       <Header title="CREW" />
-        <View className="flex-1 rounded-xl bg-white p-4 shadow-md">
+        <View className="flex-1 rounded-xl bg-white p-4 shadow-default">
           <SegmentedControl
             values={options}
             selectedIndex={selectedIndex}

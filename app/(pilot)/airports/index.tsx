@@ -38,7 +38,7 @@ export default function AirportsRoute() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <Layout variant="primary">
+      <Layout variant="secondary">
         <Header title="Airports" />
         <View>
           <AirportChart data={airportData} />

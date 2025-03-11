@@ -61,7 +61,7 @@ export function AirportSelectionSheet({
   const allAirports =
     fetchedAirports?.pages?.flatMap((page) =>
       (page.data || []).map((airport: Airport) => ({
-        label: `${(standard_style === 'ICAO' ? `${airport.name} ${airport.icao ? `(${airport.icao})` : ''}` : airport.iata) || 'N/A'}`,
+        label: `${airport.name} ${airport.code ? `(${airport.code})` : ''}`,
         value: airport.id ?? 'N/A',
         country: airport.country.toLowerCase() ?? 'default',
       }))

@@ -56,13 +56,12 @@ const TIME_DATA = {
 };
 
 export default function TimeSummary() {
-  const router = useRouter();
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <Layout variant="primary">
-        <Header title="Time summary" />
+      <Layout variant="secondary">
+        <Header title={`Time\nsummary`} />
         <ScrollView>
           <StatCard title="Currency" items={TIME_DATA.currency} />
           <StatCard title="Time limits" items={TIME_DATA.timeLimits} />
