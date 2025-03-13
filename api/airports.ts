@@ -53,3 +53,21 @@ export const searchAirports = async (query: string, format: string = 'ICAO', tok
   const response = await api(`/airports/search?q=${encodeURIComponent(query)}&format=${format}`, token);
   return response.data as Airport[];
 };
+
+export type AirportStats = {
+  code: string;
+  country: string;
+  visits: number;
+  flagUrl: string;
+};
+
+export type AirportStatsResponse = {
+  data: AirportStats[];
+  success: boolean;
+  message?: string;
+};
+
+export const fetchAirportStats = async (token?: string): Promise<AirportStatsResponse> => {
+  const response = await api('/airport-stats', token);
+  return response;
+};

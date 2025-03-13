@@ -12,34 +12,13 @@ const screenWidth = Dimensions.get('window').width;
 
 // Default data for testing/fallback
 const defaultTimeSeriesData: TimeSeriesData = {
-  '1yr': [
+  data: [
     { date: '31/03/24', value: 0 },
     { date: '30/06/24', value: 0 },
     { date: '30/09/24', value: 0 },
     { date: '31/12/24', value: 0 },
   ],
-  '3yr': [
-    { date: '31/03/22', value: 0 },
-    { date: '30/09/22', value: 0 },
-    { date: '31/03/23', value: 0 },
-    { date: '30/09/23', value: 0 },
-    { date: '31/03/24', value: 0 },
-    { date: '30/09/24', value: 0 },
-  ],
-  '5yr': [
-    { date: '31/12/20', value: 0 },
-    { date: '31/12/21', value: 0 },
-    { date: '31/12/22', value: 0 },
-    { date: '31/12/23', value: 0 },
-    { date: '31/12/24', value: 0 },
-  ],
-  'start': [
-    { date: '31/12/20', value: 0 },
-    { date: '31/12/21', value: 0 },
-    { date: '31/12/22', value: 0 },
-    { date: '31/12/23', value: 0 },
-    { date: '31/12/24', value: 0 },
-  ],
+  success: true
 };
 
 export default function TotalTimeChartScreen() {
@@ -60,35 +39,23 @@ export default function TotalTimeChartScreen() {
       
       console.log('Fetching time series data with token:', token ? 'Token exists' : 'No token');
       
-      const data = await fetchTotalTimeData(undefined, token || undefined);
-      console.log('Time series data received:', 
-        Object.keys(data).map(key => `${key}: ${data[key as keyof TimeSeriesData]?.length || 0} items`)
-      );
+      const response = await fetchTotalTimeData(undefined, token || undefined);
       
-      // Validate the data
-      let isValid = true;
-      for (const key of Object.keys(data) as Array<keyof TimeSeriesData>) {
-        if (!Array.isArray(data[key]) || data[key].length === 0) {
-          console.warn(`Missing or invalid data for period: ${key}`);
-          isValid = false;
+      if (!response.success || !Array.isArray(response.data)) {
+        if (retryCount < 2) {
+          console.log(`Invalid data received, retrying (${retryCount + 1}/2)...`);
+          setRetryCount(prev => prev + 1);
+          setTimeout(loadData, 1000);
+          return;
         }
+        throw new Error('Invalid data received from server');
       }
       
-      if (!isValid && retryCount < 2) {
-        // If data is invalid and we haven't retried too many times, try again
-        console.log(`Invalid data received, retrying (${retryCount + 1}/2)...`);
-        setRetryCount(prev => prev + 1);
-        setTimeout(loadData, 1000); // Retry after 1 second
-        return;
-      }
-      
-      setTimeSeriesData(data);
+      setTimeSeriesData(response);
     } catch (err: any) {
       console.error('Error fetching time series data:', err);
       setError('Failed to load flight time data. Please try again later.');
       setDebugInfo(err?.message || 'Unknown error');
-      
-      // Use default data when there's an error
       setTimeSeriesData(defaultTimeSeriesData);
     } finally {
       setIsLoading(false);
@@ -105,9 +72,38 @@ export default function TotalTimeChartScreen() {
   };
 
   const selectedPeriod = options[selectedIndex];
-  const data: TimeDataItem[] = timeSeriesData?.[selectedPeriod] || [];
+  const data = timeSeriesData.data || [];
 
-  const areaChartData = data.map((item) => ({
+  // Filter data based on selected period
+  const filteredData = React.useMemo(() => {
+    if (!data.length) return [];
+    
+    const now = new Date();
+    let startDate: Date;
+    
+    switch (selectedPeriod) {
+      case '1yr':
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+        break;
+      case '3yr':
+        startDate = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate());
+        break;
+      case '5yr':
+        startDate = new Date(now.getFullYear() - 5, now.getMonth(), now.getDate());
+        break;
+      case 'start':
+      default:
+        return data; // Return all data for 'start'
+    }
+    
+    return data.filter(item => {
+      const [day, month, year] = item.date.split('/');
+      const itemDate = new Date(2000 + parseInt(year), parseInt(month) - 1, parseInt(day));
+      return itemDate >= startDate;
+    });
+  }, [selectedPeriod, data]);
+
+  const areaChartData = filteredData.map((item) => ({
     value: item.value,
     label: item.date,
   }));

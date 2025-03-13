@@ -1,102 +1,86 @@
-import React, { useState } from 'react';
-import { Dimensions, View } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Dimensions, View, Text, ActivityIndicator } from 'react-native';
 import Layout from '~/components/Layout';
 import { Header } from '~/components/Header';
 import { BarChart } from 'react-native-gifted-charts';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
-
-// Define TypeScript interfaces
-interface MonthlyDataItem {
-  month: string;
-  value: number;
-}
-
-type YearlyData = {
-  [key in '2021' | '2022' | '2023' | '2024']: MonthlyDataItem[];
-};
-
-// Define dataset with proper typing
-const monthlyData: YearlyData = {
-  '2021': [
-    { month: 'Jan', value: 20 },
-    { month: 'Feb', value: 15 },
-    { month: 'Mar', value: 30 },
-    { month: 'Apr', value: 25 },
-    { month: 'May', value: 60 },
-    { month: 'Jun', value: 75 },
-    { month: 'Jul', value: 90 },
-    { month: 'Aug', value: 70 },
-    { month: 'Sep', value: 65 },
-    { month: 'Oct', value: 30 },
-    { month: 'Nov', value: 10 },
-    { month: 'Dec', value: 5 },
-  ],
-  '2022': [
-    { month: 'Jan', value: 25 },
-    { month: 'Feb', value: 18 },
-    { month: 'Mar', value: 28 },
-    { month: 'Apr', value: 27 },
-    { month: 'May', value: 65 },
-    { month: 'Jun', value: 80 },
-    { month: 'Jul', value: 85 },
-    { month: 'Aug', value: 75 },
-    { month: 'Sep', value: 60 },
-    { month: 'Oct', value: 40 },
-    { month: 'Nov', value: 15 },
-    { month: 'Dec', value: 8 },
-  ],
-  '2023': [
-    { month: 'Jan', value: 22 },
-    { month: 'Feb', value: 17 },
-    { month: 'Mar', value: 33 },
-    { month: 'Apr', value: 22 },
-    { month: 'May', value: 55 },
-    { month: 'Jun', value: 70 },
-    { month: 'Jul', value: 95 },
-    { month: 'Aug', value: 80 },
-    { month: 'Sep', value: 68 },
-    { month: 'Oct', value: 35 },
-    { month: 'Nov', value: 12 },
-    { month: 'Dec', value: 6 },
-  ],
-  '2024': [
-    { month: 'Jan', value: 20 },
-    { month: 'Feb', value: 14 },
-    { month: 'Mar', value: 32 },
-    { month: 'Apr', value: 28 },
-    { month: 'May', value: 60 },
-    { month: 'Jun', value: 78 },
-    { month: 'Jul', value: 95 },
-    { month: 'Aug', value: 72 },
-    { month: 'Sep', value: 66 },
-    { month: 'Oct', value: 29 },
-    { month: 'Nov', value: 12 },
-    { month: 'Dec', value: 5 },
-  ],
-};
+import { fetchMonthlyStats, MonthlyDataItem, YearlyData } from '~/api/monthly-stats';
+import { useAuth } from '~/context/auth-context';
 
 const screenHeight = Dimensions.get('window').height;
-const screenWidth = Dimensions.get('window').width;
+
+// Default data for testing/fallback
+const defaultMonthlyData: YearlyData = {
+  '2024': Array(12).fill(0).map((_, index) => ({
+    month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index],
+    value: 0
+  }))
+};
 
 export default function MonthlyChartScreen() {
-  const [selectedIndex, setSelectedIndex] = useState<number>(3);
-  const options: ('2021' | '2022' | '2023' | '2024')[] = ['2021', '2022', '2023', '2024'];
+  const { token } = useAuth();
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [monthlyData, setMonthlyData] = useState<YearlyData>(defaultMonthlyData);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
-  const selectedYear = options[selectedIndex]; // Now TypeScript understands this is a valid key
-  const data: MonthlyDataItem[] = monthlyData[selectedYear];
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('Fetching monthly stats with token:', token ? 'Token exists' : 'No token');
+      
+      const response = await fetchMonthlyStats(token || undefined);
+      
+      if (!response.success || !response.data) {
+        if (retryCount < 2) {
+          console.log(`Invalid data received, retrying (${retryCount + 1}/2)...`);
+          setRetryCount(prev => prev + 1);
+          setTimeout(loadData, 1000);
+          return;
+        }
+        throw new Error('Invalid data received from server');
+      }
+      
+      setMonthlyData(response.data);
+    } catch (err: any) {
+      console.error('Error fetching monthly stats:', err);
+      setError('Failed to load monthly statistics. Please try again later.');
+      setMonthlyData(defaultMonthlyData);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token, retryCount]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleRetry = () => {
+    setRetryCount(0);
+    loadData();
+  };
+
+  // Get available years and sort them
+  const years = Object.keys(monthlyData).sort();
+  const options = years.length > 0 ? years : ['2024'];
+  
+  const selectedYear = options[selectedIndex];
+  const data: MonthlyDataItem[] = monthlyData[selectedYear] || defaultMonthlyData['2024'];
+
+  const barChartData = data.map((item) => ({
+    value: item.value,
+    label: item.month,
+    frontColor: '#45D62E',
+  }));
 
   // Find max value dynamically for consistent scaling
   const allValues = Object.values(monthlyData).flatMap((yearData) =>
     yearData.map((item) => item.value)
   );
-  const absoluteMaxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
-  // const fixedMaxValue = Math.ceil(absoluteMaxValue * 1.2); // Add 20% padding
-
-  const barChartData = data.map((item) => ({
-    value: item.value,
-    label: item.month,
-    frontColor: '#45D62E', // Green bar color
-  }));
+  const maxValue = allValues.length > 0 ? Math.ceil(Math.max(...allValues) * 1.2) : 100;
 
   return (
     <Layout variant='secondary'>
@@ -112,25 +96,42 @@ export default function MonthlyChartScreen() {
           style={{ marginBottom: 15, backgroundColor: '#B2EEAD', borderRadius: 8, opacity: 1 }}
         />
 
-        <View style={{ flex: 1 }}>
-          <BarChart
-            data={barChartData}
-            barWidth={15}
-            spacing={10}
-            barBorderRadius={3}
-            showGradient
-            xAxisThickness={0}
-            yAxisThickness={0}
-            frontColor={'#39D52B'}
-            gradientColor={'#A1EA95'}
-            yAxisTextStyle={{ fontSize: 10, color: 'black' }}
-            xAxisLabelsVerticalShift={5}
-            xAxisLabelTextStyle={{ fontSize: 10, color: 'black', transform: [{ rotate: '90deg' }] }}
-            noOfSections={20}
-            maxValue={100}
-            height={screenHeight * 0.8}
-          />
-        </View>
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center" style={{ height: 300 }}>
+            <ActivityIndicator size="large" color="#45D62E" />
+            <Text className="mt-4 text-gray-600">Loading monthly statistics...</Text>
+          </View>
+        ) : error ? (
+          <View className="flex-1 items-center justify-center" style={{ height: 300 }}>
+            <Text className="text-red-500">{error}</Text>
+            <Text 
+              className="mt-4 text-blue-500 underline"
+              onPress={handleRetry}
+            >
+              Retry
+            </Text>
+          </View>
+        ) : (
+          <View style={{ flex: 1 }}>
+            <BarChart
+              data={barChartData}
+              barWidth={15}
+              spacing={10}
+              barBorderRadius={3}
+              showGradient
+              xAxisThickness={0}
+              yAxisThickness={0}
+              frontColor={'#39D52B'}
+              gradientColor={'#A1EA95'}
+              yAxisTextStyle={{ fontSize: 10, color: 'black' }}
+              xAxisLabelsVerticalShift={5}
+              xAxisLabelTextStyle={{ fontSize: 10, color: 'black', transform: [{ rotate: '90deg' }] }}
+              noOfSections={20}
+              maxValue={maxValue}
+              height={screenHeight * 0.8}
+            />
+          </View>
+        )}
       </View>
     </Layout>
   );

@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, Stack, Link, router } from 'expo-router';
 import Layout from '~/components/Layout';
@@ -18,7 +19,7 @@ import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
 import { format, parseISO } from 'date-fns';
 import { differenceInMinutes } from 'date-fns';
-import { Flight, parseCrew } from '~/api/flights';
+import { Flight, parseCrew, deleteFlight } from '~/api/flights';
 
 const calculateDuration = (departure: string, arrival: string): string => {
   const depTime = parseISO(departure);
@@ -42,6 +43,8 @@ export default function FlightDetails() {
   const [isLoading, setIsLoading] = useState(!selectedFlight);
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Helper function to process flight data
   const processFlightData = (flightData: Flight): Flight => {
@@ -103,6 +106,26 @@ export default function FlightDetails() {
         });
     }
   }, [id, token]);
+
+  const handleDelete = async () => {
+    if (!flight || !token) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteFlight(flight.id, token);
+      setIsDeleteModalVisible(false);
+      // Navigate back to flights list
+      router.replace('/(pilot)/flights');
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to delete flight. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -336,48 +359,52 @@ export default function FlightDetails() {
             />
           </View>
 
-          <View className="mt-4 flex-row justify-between">
-            <Link href={`/flights/${id}/edit`} asChild>
-              <TouchableOpacity className="mr-2 flex-1 rounded-lg bg-[#2B9C1A] py-3">
-                <Text className="text-center font-semibold text-white">Edit</Text>
+          <View className="mt-4 flex-row gap-4 p-4">
+            <Link href={`/flights/${id}/edit`} asChild className="flex-1">
+              <TouchableOpacity style={styles.editBtn}>
+                <Text style={styles.buttonText}>Edit Flight</Text>
               </TouchableOpacity>
             </Link>
             <TouchableOpacity 
-              className="ml-2 flex-1 rounded-lg bg-red-500 py-3"
-              onPress={() => setModalVisible(true)}
+              style={styles.deleteBtn} 
+              onPress={() => setIsDeleteModalVisible(true)}
+              className="flex-1"
             >
-              <Text className="text-center font-semibold text-white">Delete</Text>
+              <Text style={styles.buttonText}>Delete Flight</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Layout>
 
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        visible={isDeleteModalVisible}
+        onRequestClose={() => setIsDeleteModalVisible(false)}
       >
-        <View className="flex-1 items-center justify-center bg-black/50">
-          <View className="m-5 w-4/5 rounded-lg bg-white p-6 shadow-default">
-            <Text className="mb-4 text-lg font-bold">Confirm Deletion</Text>
-            <Text className="mb-4">Are you sure you want to delete this flight?</Text>
-            <View className="flex-row justify-between">
-              <TouchableOpacity 
-                className="rounded-lg bg-gray-300 px-4 py-2"
-                onPress={() => setModalVisible(false)}
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Delete Flight</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete this flight? This action cannot be undone.
+            </Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: '#6B7280' }]}
+                onPress={() => setIsDeleteModalVisible(false)}
               >
-                <Text>Cancel</Text>
+                <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                className="rounded-lg bg-red-500 px-4 py-2"
-                onPress={() => {
-                  // Handle delete logic here
-                  setModalVisible(false);
-                  router.replace('/flights');
-                }}
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: '#AD1519' }]}
+                onPress={handleDelete}
+                disabled={isDeleting}
               >
-                <Text className="text-white">Delete</Text>
+                {isDeleting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.modalButtonText}>Delete</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

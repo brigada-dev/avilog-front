@@ -251,3 +251,23 @@ export const updateFlight = async (id: number, data: FlightFormData, token: stri
     throw error;
   }
 };
+
+export const deleteFlight = async (id: number, token: string) => {
+  try {
+    const response = await api(`/flights/${id}`, token, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    
+    return response;
+  } catch (error: any) {
+    // If the error is a 404, the flight was already deleted
+    if (error.response?.status === 404) {
+      return { success: true, message: 'Flight already deleted' };
+    }
+    throw error;
+  }
+};

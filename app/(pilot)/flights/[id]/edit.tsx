@@ -328,10 +328,10 @@ export default function EditFlight() {
                   control={form.control}
                   name="departure_date_time"
                   render={({ field: { value } }) => (
-                    <DateTimePicker
+              <DateTimePicker
                       value={new Date(value)}
-                      mode="date"
-                      display="default"
+                mode="date"
+                display="default"
                       accentColor="#23D013"
                       themeVariant="light"
                       onChange={(e, d) => {
@@ -349,9 +349,9 @@ export default function EditFlight() {
                   control={form.control}
                   name="arrival_date_time"
                   render={({ field: { value } }) => (
-                    <DateTimePicker
+              <DateTimePicker
                       value={new Date(value)}
-                      mode="date"
+                mode="date"
                       display="default"
                       accentColor="#23D013"
                       themeVariant="light"
@@ -401,7 +401,7 @@ export default function EditFlight() {
                 style={{ height: 32, width: 32 }}
               />
               {arrivalAirport && (
-                <Image
+              <Image
                   source={{
                     uri: `https://flagcdn.com/w40/${arrivalAirport.toLowerCase()}.png`,
                   }}
@@ -431,10 +431,10 @@ export default function EditFlight() {
                 control={form.control}
                 name="departure_date_time"
                 render={({ field: { value } }) => (
-                  <DateTimePicker
+              <DateTimePicker
                     value={new Date(value)}
-                    mode="time"
-                    display="default"
+                mode="time"
+                display="default"
                     accentColor="#23D013"
                     themeVariant="light"
                     onChange={(e, t) => {
@@ -456,10 +456,10 @@ export default function EditFlight() {
                 control={form.control}
                 name="arrival_date_time"
                 render={({ field: { value } }) => (
-                  <DateTimePicker
+              <DateTimePicker
                     value={new Date(value)}
-                    mode="time"
-                    display="default"
+                mode="time"
+                display="default"
                     accentColor="#23D013"
                     themeVariant="light"
                     onChange={(e, t) => {
@@ -517,7 +517,7 @@ export default function EditFlight() {
                     />
                     <TouchableOpacity
                       onPress={() => form.setValue('departure.day', departureDayValue + 1)}>
-                      <Feather name="plus-circle" size={42} color="#23d013" />
+                    <Feather name="plus-circle" size={42} color="#23d013" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -544,15 +544,15 @@ export default function EditFlight() {
                     />
                     <TouchableOpacity
                       onPress={() => form.setValue('departure.night', departureNightValue + 1)}>
-                      <Feather name="plus-circle" size={42} color="#23d013" />
+                    <Feather name="plus-circle" size={42} color="#23d013" />
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
               <View className="mt-2 rounded-xl border border-black/10">
                 <View className="mt-2">
-                  <View className="border-b border-black/10 p-2">
-                    <Text>Type of flight</Text>
+                <View className="border-b border-black/10 p-2">
+                  <Text>Type of flight</Text>
 
                     <Ionicons
                       name="list"
@@ -560,7 +560,7 @@ export default function EditFlight() {
                       color="#23D013"
                       className="absolute right-3 top-3"
                     />
-                    <View className="justify-center">
+                  <View className="justify-center">
                       <Controller
                         control={form.control}
                         name="type_of_flight"
@@ -621,7 +621,7 @@ export default function EditFlight() {
                       />
                       <TouchableOpacity
                         onPress={() => form.setValue('landing.day', landingDayValue + 1)}>
-                        <Feather name="plus-circle" size={42} color="#23d013" />
+                      <Feather name="plus-circle" size={42} color="#23d013" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -648,7 +648,7 @@ export default function EditFlight() {
                       />
                       <TouchableOpacity
                         onPress={() => form.setValue('landing.night', landingNightValue + 1)}>
-                        <Feather name="plus-circle" size={42} color="#23d013" />
+                      <Feather name="plus-circle" size={42} color="#23d013" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -685,12 +685,12 @@ export default function EditFlight() {
                 renderItem={({ item }) => {
                   const [key, value] = item;
                   return (
-                    <View
-                      key={key}
+                <View
+                  key={key}
                       className="mx-2 aspect-square size-16 items-center justify-center rounded-full border-4 border-[#81E371]">
                       <Text className="text-base font-bold">{value.toFixed(1)}</Text>
-                      <Text className="text-xs text-gray-500">{key.toUpperCase()}</Text>
-                    </View>
+                  <Text className="text-xs text-gray-500">{key.toUpperCase()}</Text>
+                </View>
                   );
                 }}
               />

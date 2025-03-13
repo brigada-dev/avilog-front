@@ -5,9 +5,11 @@ export interface TimeDataItem {
   value: number;
 }
 
-export type TimeSeriesData = {
-  [key in '1yr' | '3yr' | '5yr' | 'start']: TimeDataItem[];
-};
+export interface TimeSeriesData {
+  data: TimeDataItem[];
+  success: boolean;
+  message?: string;
+}
 
 /**
  * Fetch total flight time data for different time periods
@@ -32,16 +34,7 @@ export const fetchTotalTimeData = async (
       throw new Error('Invalid response from server');
     }
     
-    // Create default empty data if any period is missing
-    const defaultData: TimeSeriesData = {
-      '1yr': [],
-      '3yr': [],
-      '5yr': [],
-      'start': []
-    };
-    
-    // Merge the response with the default data
-    return { ...defaultData, ...response } as TimeSeriesData;
+    return response as TimeSeriesData;
   } catch (error) {
     console.error('Error fetching time series data:', error);
     throw error;
